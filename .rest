@@ -1,0 +1,5 @@
+# All properties
+GET http://localhost:8080/properties/all?limit=100 HTTP/1.1
+
+# Property by ID
+GET http://localhost:8080/properties/12345678912345678912345678912345 HTTP/1.1

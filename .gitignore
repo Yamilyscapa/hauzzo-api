@@ -1,0 +1,33 @@
+# Ignore configuration files
+.config
+~/.config
+
+# Ignore cache files
+/node_modules/
+node_modules/
+
+# Ignore compilation files
+/dist
+/build
+
+# Ignore log files
+logs/
+*.log
+
+# Ignore browser session files
+*.safari-sites
+*.firefox-sites
+
+# Ignore editor configuration files
+*.sublime-project
+*.vscode/
+.vscode/
+
+# Ignore test snapshot files
+*.snapshots
+
+# Ignore environment files
+.env
+.env.local
+.env.development
+.env.production
