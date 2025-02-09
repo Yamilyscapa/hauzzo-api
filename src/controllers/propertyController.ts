@@ -2,10 +2,22 @@ import { pool } from "../database/client";
 import { Property } from "../types/global";
 
 // GET
-export async function findManyProperties(limit: number) {
+export async function findManyProperties(limit?: number | undefined) {
+    let properties
+
+    if (limit === undefined) {
+        properties = { rows: properties } = await pool.query('SELECT * FROM properties')
+    } else {
+        properties = { rows: properties } = await pool.query('SELECT * FROM properties LIMIT $1', [limit])
+    }
+
+    return properties
 }
 
+
 export async function findOneProperty(id: string) {
+    const { rows: property } = await pool.query('SELECT * FROM properties WHERE id = $1', [id])
+    return property
 }
 
 // POST

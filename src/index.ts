@@ -1,7 +1,6 @@
 import express from 'express'
 import { config as dotenv } from 'dotenv'
 import router from './routes/'
-import { db } from './database/client'
 // Types
 import type { Application } from 'express'
 
@@ -9,6 +8,8 @@ import type { Application } from 'express'
 dotenv()
 const app: Application = express();
 
+// Middleware
+app.use(express.json())
 // Router
 app.use(router)
 

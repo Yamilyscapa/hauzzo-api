@@ -2,4 +2,17 @@
 GET http://localhost:8080/properties/all?limit=100 HTTP/1.1
 
 # Property by ID
-GET http://localhost:8080/properties/12345678912345678912345678912345 HTTP/1.1
+GET http://localhost:8080/properties/1 HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.am9obkBkb2UuY29t.4AP1mI1v2Hb7oL4fnWdaSsTu4v-L7KUGa2wEIpp1Yn0
+
+# CREATE USER
+POST http://localhost:8080/auth/create/user
+Content-Type: application/json
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@doe.com",
+    "password": "@123!",
+    "role": "user"
+}

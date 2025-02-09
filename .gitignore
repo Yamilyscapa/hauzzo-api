@@ -31,3 +31,7 @@ logs/
 .env.local
 .env.development
 .env.production
+
+# dev
+.todo
+.rest
