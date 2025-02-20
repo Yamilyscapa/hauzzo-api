@@ -1,8 +1,5 @@
 type PropertyType = 'house' | 'apartment'
-type UserType = {
-    user: 'user',
-    broker: 'broker'
-}
+type UserType = 'user' | 'broker'
 
 export type Error = {
     message: string;
@@ -10,16 +7,27 @@ export type Error = {
     error?: any
 }
 
-export interface Property {
-    id: string;
+type Property = {
     title: string;
     description: string;
-    location: string;
-    tags: string[];
     price: number;
-    brokerId: string;
+    tags: string[];
+    bedrooms: number;
+    bathrooms: number;
+    parking: number;
     type: PropertyType;
-}
+    location: {
+        address: string;
+        addressNumber: string;
+        street: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zip: string;
+    };
+    images: string[];
+    brokerId: string;
+};
 
 export interface User {
     id: string;

@@ -8,17 +8,21 @@ interface Res {
 }
 
 export function successResponse(res: Response, data: object, message: string = "Successful request", statusCode: number = 200) {
-    return res.status(statusCode).json(<Res>{
-        status: 'success',
+    const response: Res = {
+        status: 'Success',
         message,
         data
-    })
+    }
+
+    return res.status(statusCode).json(response)
 }
 
 export function errorResponse(res: Response, message: string = "Something went wrong", statusCode: number = 500, error?: any) {
-    return res.status(statusCode).json(<Res>{
-        status: 'error',
+    const response: Res = {
+        status: 'Error',
         message,
         error
-    })
+    }
+    
+    return res.status(statusCode).json(response)
 }
