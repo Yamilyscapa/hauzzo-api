@@ -1,6 +1,6 @@
 import { pool } from "../database/client";
 import { Property } from "../types/global";
-import { findUser } from './authController'
+import { getBrokerById } from './brokerController'
 
 // GET
 export async function findManyProperties(limit?: number) {
@@ -47,9 +47,9 @@ export async function createProperty(property: Property) {
         }
 
         // Validate that the broker exists
-        const user = await findUser(brokerId, 'broker')
+        const broker = await getBrokerById(brokerId)
 
-        if (!user) return false
+        if (!broker) return false
 
         // Insert into database
         const { rows } = await pool.query(

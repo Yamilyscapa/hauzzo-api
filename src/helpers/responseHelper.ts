@@ -17,6 +17,7 @@ export function successResponse(res: Response, data: object, message: string = "
     return res.status(statusCode).json(response)
 }
 
+
 export function errorResponse(res: Response, message: string = "Something went wrong", statusCode: number = 500, error?: any) {
     const response: Res = {
         status: 'Error',

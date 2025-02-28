@@ -1,9 +1,15 @@
+// Router setup
 import { Router } from "express";
 const router = Router()
-import propertyService from '../services/propertyService'
-import authService from '../services/authService'
 
+// Importing routes
+import propertyService from '../services/propertyService'
+import userService from '../services/userService'
+import brokerService from '../services/brokerService'
+
+// Using routes
 router.use('/properties', propertyService)
-router.use('/auth', authService)
+router.use('/users', userService)
+router.use('/brokers', brokerService)
 
 export default router
