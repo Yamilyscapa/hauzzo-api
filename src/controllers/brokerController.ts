@@ -21,6 +21,15 @@ export async function createBroker(body: Broker): Promise<stdRes> {
         const { firstName, lastName, email, phone, password } = body
         const hashedPassword = await hashPassword(password)
 
+        //  Validate password
+        if (!validatePassword(password)) {
+            throw new Error('Invalid password format; Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character')
+        }
+
+        if (email && !validateEmail(email)) {
+            throw new Error('Invalid email format')
+        }
+        
         // Check if the required fields are present 
         if (!firstName || !lastName || !email || !password) {
             throw new Error('Missing required fields')
