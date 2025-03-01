@@ -4,7 +4,7 @@ const router = Router()
 
 // Imports
 import { errorResponse, successResponse } from '../helpers/responseHelper';
-import { getBrokerById, getBrokerByEmail, createBroker } from '../controllers/brokerController';
+import { getBrokerById, getBrokerByEmail, createBroker, editBroker } from '../controllers/brokerController';
 import { Broker } from '../types/global';
 
 // POST /brokers/new
@@ -81,6 +81,38 @@ router.get('/email/:email', async (req: Request, res: Response) => {
         }
     } catch (error) {
         errorResponse(res, 'Error finding the broker', 400)
+    }
+})
+
+router.put('/edit/:id', async (req: Request, res: Response) => {
+    try {
+        const id: string = req.params.id
+        const body = req.body
+
+        if (!id) {
+            errorResponse(res, 'Invalid id', 400)
+            return;
+        }
+
+        if (Object.keys(body).length === 0) {
+            errorResponse(res, 'No changes made, empty body', 400)
+            return;
+        }
+
+        const { broker, error } = await editBroker(id, body)
+
+        if (error) {
+            errorResponse(res, error.message, 400, error)
+            return
+        } else if (!broker) {
+            errorResponse(res, ('Error updating the broker'), 400)
+            return
+        } else {
+            successResponse(res, broker as Broker, 'Broker updated', 200)
+            return
+        }
+    } catch (error) {
+        errorResponse(res, 'Error updating the broker', 400)
     }
 })
 

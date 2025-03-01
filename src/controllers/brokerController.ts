@@ -1,7 +1,10 @@
 import { pool } from '../database/client';
 import { Broker } from '../types/global';
 import { hashPassword } from '../utils/passwordHash'
+import validateEmail from '../utils/emailValidation.';
+import validatePassword from '../utils/passwordValidation';
 
+// Standarize the response of the service functions
 interface stdRes {
     broker: Broker | null,
     error: any
@@ -39,6 +42,61 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
         response.broker = rows[0]
         response.error = null
+        return response
+    } catch (error: Error | any) {
+        response.broker = null
+        response.error = error
+        return response
+    }
+}
+
+export async function editBroker(id: string, { firstName, lastName, email, phone, password }: Broker): Promise<stdRes> {
+    let response: stdRes = {
+        broker: null,
+        error: null
+    }
+
+    // Convert to key - values to make dynacmic the query
+    const currentBroker = {
+        "first_name": firstName,
+        "last_name": lastName,
+        "email": email,
+        "phone": phone,
+        "password": password
+    }
+
+    try {
+        const queryValues: (string | null)[] = Object.entries(currentBroker)
+            .map(([key, value]) => {
+                if (key === "email") {
+                    if (value && !validateEmail(value)) throw new Error('Invalid email format')
+                }
+
+                if (key === "password") {
+                    if (value && !validatePassword(value)) throw new Error('Invalid password format; Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character')
+                }
+
+                if (value === " ") {
+                    throw new Error(`Value for ${key} cannot be empty`)
+                } 
+
+                if (!value) return null
+
+                return `${key} = '${value}'`
+            })
+
+        const queryValuesNotNull = queryValues.filter(value => value !== null)
+
+        const query = {
+            text: `UPDATE brokers SET ${queryValuesNotNull.join(', ')} WHERE id = $1 RETURNING *`,
+            values: [id]
+        }
+
+        const { rows } = await pool.query(query)
+
+        response.broker = rows[0]
+        response.error = null
+
         return response
     } catch (error: Error | any) {
         response.broker = null
