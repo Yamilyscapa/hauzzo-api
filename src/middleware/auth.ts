@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { errorResponse } from '../helpers/responseHelper'
-import { User } from '../types/global'
+import { Broker, User } from '../types/global'
 
 export function auth(req: Request, res: Response, next: NextFunction): void {
     try {
@@ -17,7 +17,7 @@ export function auth(req: Request, res: Response, next: NextFunction): void {
     }
 }
 
-export async function signAuth(user: User) {
+export async function signAuth(user: User | Broker): Promise<string> {
     const { email } = user
 
     const SECRET: string = process.env.JWT_SECRET || ''
