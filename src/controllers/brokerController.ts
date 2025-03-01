@@ -19,17 +19,17 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
     try {
         const { firstName, lastName, email, phone, password } = body
-        const hashedPassword = await hashPassword(password)
-
         //  Validate password
         if (!validatePassword(password)) {
             throw new Error('Invalid password format; Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character')
         }
 
+        const hashedPassword = await hashPassword(password)
+
         if (email && !validateEmail(email)) {
             throw new Error('Invalid email format')
         }
-        
+
         // Check if the required fields are present 
         if (!firstName || !lastName || !email || !password) {
             throw new Error('Missing required fields')
@@ -87,7 +87,7 @@ export async function editBroker(id: string, { firstName, lastName, email, phone
 
                 if (value === " ") {
                     throw new Error(`Value for ${key} cannot be empty`)
-                } 
+                }
 
                 if (!value) return null
 
@@ -107,7 +107,7 @@ export async function editBroker(id: string, { firstName, lastName, email, phone
         response.error = null
 
         return response
-    } catch (error: Error | any) {
+    } catch (error) {
         response.broker = null
         response.error = error
         return response
@@ -115,7 +115,10 @@ export async function editBroker(id: string, { firstName, lastName, email, phone
 }
 
 export async function getBrokerById(id: string): Promise<stdRes> {
-    let response = {} as stdRes
+    let response: stdRes = {
+        broker: null,
+        error: null
+    }
 
     try {
         const query = {

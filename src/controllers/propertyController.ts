@@ -2,26 +2,64 @@ import { pool } from "../database/client";
 import { Property } from "../types/global";
 import { getBrokerById } from './brokerController'
 
+interface stdRes {
+    property: Property | Property[] | null,
+    error: any
+}
+
 // GET
-export async function findManyProperties(limit?: number) {
-    if (limit) {
-        const { rows } = await pool.query('SELECT * FROM properties LIMIT $1', [limit])
-        return rows
-    } else {
-        const { rows } = await pool.query('SELECT * FROM properties')
-        return rows
+export async function findManyProperties(limit?: number): Promise<stdRes> {
+    let response: stdRes = {
+        property: null,
+        error: null
+    }
+
+    try {
+        const query = 'SELECT * FROM properties'
+
+        if (limit) {
+            query.concat(` LIMIT ${limit}`)
+        }
+
+        const { rows: properties } = await pool.query(query)
+        response.property = properties
+
+        if (properties.length === 0) {
+            response.error = 'No properties found'
+        }
+
+        return response
+    } catch (error) {
+        response.error = error
+        return response
     }
 }
 
-export async function findOneProperty(id: string) {
-    const { rows: property } = await pool.query('SELECT * FROM properties WHERE id = $1', [id])
-    return property
+export async function findOneProperty(id: string): Promise<stdRes> {
+    let response: stdRes = {
+        property: null,
+        error: null
+    }
+
+    try {
+        const { rows: property } = await pool.query('SELECT * FROM properties WHERE id = $1', [id])
+        response.property = property[0]
+
+        return response
+    } catch (error) {
+        response.error = error
+        return response
+    }
 }
 
 // POST
-export async function createProperty(property: Property) {
-    try {
+export async function createProperty(property: Property, brokerId: string): Promise<stdRes> {
+    let response: stdRes = {
+        property: null,
+        error: null
+    }
 
+    try {
         const {
             title,
             description,
@@ -33,23 +71,51 @@ export async function createProperty(property: Property) {
             type,
             location,
             images,
-            brokerId
-        } = property as Property;
+        } = property;
+        const requiredFields = ['title', 'description', 'price', 'tags', 'bedrooms', 'bathrooms', 'parking', 'type', 'images']
 
         // Validate that all of the data is present
-        for (const key in property) {
-            if (!property[key as keyof Property]) return
+        for (const key of requiredFields) {
+            if (!property[key as keyof typeof property]) {
+                response.error = `Missing ${key} data`
+                return response
+            }
+
+            // Validate that address is present
+            for (const key in location) {
+                if (!location[key as keyof typeof location]) {
+                    response.error = 'Missing location data'
+                    return response
+                }
+            }
         }
 
-        // Validate that address is present
-        for (const key in location) {
-            if (!location[key as keyof typeof location]) return false
-        }
+        // Validate that the location data is complete
+        Object.entries(location).forEach(([key, value], index) => {
+            const locationRequiredFields = ['address', 'city', 'state', 'zip']
+            const includesAll = locationRequiredFields.every(field => Object.keys(location).includes(field))
+
+            if (!includesAll) {
+                response.error = 'Missing location data (address, city, state, zip)'
+                return response
+            }
+        })
 
         // Validate that the broker exists
-        const broker = await getBrokerById(brokerId)
+        if (!brokerId) {
+            response.error = 'Missing broker ID'
+            return response
+        }
 
-        if (!broker) return false
+        const { broker, error } = await getBrokerById(brokerId)
+
+        if (!broker) {
+            response.error = 'Broker not found'
+            return response
+        } else if (error) {
+            response.error = error
+            return response
+        }
 
         // Insert into database
         const { rows } = await pool.query(
@@ -73,12 +139,15 @@ export async function createProperty(property: Property) {
         );
 
         if (!rows[0]) {
-            return null
+            response.error = 'Error creating property'
+            return response
         }
 
-        return rows[0]
+        response.property = rows[0]
+        return response
     } catch (error) {
-        return error
+        response.error = error
+        return response
     }
 }
 

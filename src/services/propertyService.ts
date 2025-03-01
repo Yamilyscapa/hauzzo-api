@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Request, Response, NextFunction } from "express";
 import { createProperty, editProperty, findManyProperties, findOneProperty } from '../controllers/propertyController';
 import { successResponse, errorResponse } from '../helpers/responseHelper'
-import { auth } from '../middleware/auth'
+import { auth, AuthenticatedRequest } from '../middleware/auth'
 
 const router = Router()
 
@@ -12,9 +12,19 @@ import { Property } from '../types/global'
 // GET
 router.get('/all', async (req: Request, res: Response): Promise<any> => {
     try {
-        const limit = Number(req.query?.limit || undefined)
+        const limit = Number(req.query?.limit)
 
-        const properties = await findManyProperties(limit)
+        if (isNaN(limit)) {
+            return errorResponse(res, 'Invalid limit value', 400)
+        }
+
+        const { property: properties, error } = await findManyProperties(limit)
+
+        if (!properties) {
+            return errorResponse(res, error, 404)
+        } else if (error) {
+            return errorResponse(res, error, 400)
+        }
 
         return successResponse(res, properties, 'Properties found', 200)
     } catch (error) {
@@ -28,9 +38,13 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction): Prom
         const id: string = req.params.id
         if (!id) return;
 
-        const property = await findOneProperty(id)
+        const { property, error } = await findOneProperty(id)
 
-        if (!property) return errorResponse(res, 'Property not found', 404)
+        if (!property) {
+            return errorResponse(res, 'Property not found', 404)
+        } else if (error) {
+            return errorResponse(res, error, 400)
+        }
 
         successResponse(res, property, 'Property found', 200)
     } catch (error) {
@@ -39,12 +53,19 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction): Prom
 })
 
 // POST
-router.post('/create', auth, async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+router.post('/create', auth, async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
         const propertyData = req.body as Property
+        const brokerId = req.userId || ''
 
-        const property = await createProperty(propertyData)
+        const { property, error } = await createProperty(propertyData, brokerId)
 
+        if (!property) {
+            return errorResponse(res, error, 400)
+        } else if (error) {
+            return errorResponse(res, error, 400)
+        }
+        
         successResponse(res, property, 'Property created', 201)
     } catch (error) {
         errorResponse(res, 'Error creating the property', 400)
