@@ -20,10 +20,10 @@ router.get('/all', async (req: Request, res: Response): Promise<any> => {
 
         const { property: properties, error } = await findManyProperties(limit)
 
-        if (!properties) {
-            return errorResponse(res, error, 404)
-        } else if (error) {
+        if (error) {
             return errorResponse(res, error, 400)
+        } else if (!properties) {
+            return errorResponse(res, error, 404)
         }
 
         return successResponse(res, properties, 'Properties found', 200)
@@ -40,10 +40,10 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction): Prom
 
         const { property, error } = await findOneProperty(id)
 
-        if (!property) {
-            return errorResponse(res, 'Property not found', 404)
-        } else if (error) {
+        if (error) {
             return errorResponse(res, error, 400)
+        } else if (!property) {
+            return errorResponse(res, 'Property not found', 404)
         }
 
         successResponse(res, property, 'Property found', 200)
@@ -60,12 +60,12 @@ router.post('/create', auth, async (req: AuthenticatedRequest, res: Response, ne
 
         const { property, error } = await createProperty(propertyData, brokerId)
 
-        if (!property) {
+        if (error) {
             return errorResponse(res, error, 400)
-        } else if (error) {
+        } else if (!property) {
             return errorResponse(res, error, 400)
         }
-        
+
         successResponse(res, property, 'Property created', 201)
     } catch (error) {
         errorResponse(res, 'Error creating the property', 400)
@@ -80,11 +80,14 @@ router.put('/edit/:id', auth, async (req: Request, res: Response, next: NextFunc
 
         if (!id) return errorResponse(res, 'No property id provided', 400);
 
-        const property = await editProperty(id, { title, description, tags, price, location } as Property)
 
-        if (!property) return errorResponse(res, 'Error editing the property', 400)
+        const { property, error } = await editProperty(id, { title, description, tags, price, location } as Property)
 
-        if (Object.keys(property).length === 0) return errorResponse(res, 'No changes to edit', 400)
+        if (error) {
+            return errorResponse(res, error, 400)
+        } else if (!property) {
+            return errorResponse(res, 'Error editing the property', 400)
+        }
 
         successResponse(res, property, 'Property edited', 200)
     } catch (error) {
