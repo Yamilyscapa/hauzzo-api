@@ -16,11 +16,8 @@ export async function findManyProperties(limit?: number): Promise<stdRes> {
     }
 
     try {
-        const query = 'SELECT * FROM properties'
-
-        if (limit) {
-            query.concat(` LIMIT ${limit}`)
-        }
+        let query = 'SELECT * FROM properties'
+        if (limit) query += ` LIMIT ${limit}`
 
         const { rows: properties } = await pool.query(query)
         response.property = properties
@@ -72,8 +69,9 @@ export async function createProperty(property: Property, brokerId: string): Prom
             type,
             location,
             images,
+            transaction
         } = property;
-        const requiredFields = ['title', 'description', 'price', 'tags', 'bedrooms', 'bathrooms', 'parking', 'type', 'images']
+        const requiredFields = ['title', 'description', 'price', 'tags', 'bedrooms', 'bathrooms', 'parking', 'type', 'images', 'transaction']
 
         // Validate that all of the data is present
         for (const key of requiredFields) {
@@ -121,8 +119,8 @@ export async function createProperty(property: Property, brokerId: string): Prom
         // Insert into database
         const { rows } = await pool.query(
             `INSERT INTO properties 
-        (title, description, price, tags, bedrooms, bathrooms, parking, location, type, images, broker_id) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+        (title, description, price, tags, bedrooms, bathrooms, parking, location, type, images, broker_id, transaction) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
         RETURNING *`,
             [
                 title,
@@ -135,7 +133,8 @@ export async function createProperty(property: Property, brokerId: string): Prom
                 JSON.stringify(location), // Stringify to store as JSON in Postgres
                 type,
                 images,
-                brokerId
+                brokerId,
+                transaction
             ]
         );
 
@@ -164,7 +163,8 @@ export async function editProperty(id: string, { title, description, tags, price
         return response
     }
 
-    const { property, error } = await findOneProperty(id)
+    const { property: propertyT, error } = await findOneProperty(id)
+    const property = propertyT as Property
 
     if (error) {
         response.error = error
@@ -182,6 +182,16 @@ export async function editProperty(id: string, { title, description, tags, price
             "tags": tags,
             "price": price,
             "location": location
+        }
+
+        const currentLocation: Property['location'] = {
+            address: property.location.address,
+            addressNumber: property.location.addressNumber,
+            street: property.location.street,
+            neighborhood: property.location.neighborhood,
+            city: property.location.city,
+            state: property.location.state,
+            zip: property.location.zip,
         }
 
         const queryValues: (string | null)[] = Object.entries(currentProperty)
@@ -212,7 +222,7 @@ export async function editProperty(id: string, { title, description, tags, price
                                 }, {} as Record<string, any>);
                         }
 
-                        const newLocation = getCommonKeys(property.location, value as object)
+                        const newLocation = getCommonKeys(currentLocation, value as Property['location'])
 
                         if (Object.keys(property.location).length === 0) return null
                         value = JSON.stringify({ ...property.location, ...(newLocation) })

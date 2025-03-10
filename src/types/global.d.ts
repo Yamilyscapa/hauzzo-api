@@ -8,6 +8,7 @@ export type Error = {
 }
 
 type Property = {
+    id: string;
     title: string;
     description: string;
     price: number;
@@ -15,18 +16,20 @@ type Property = {
     bedrooms: number;
     bathrooms: number;
     parking: number;
-    type: PropertyType;
     location: {
-        address: string;
-        addressNumber: string;
-        street: string;
-        neighborhood: string;
+        zip: string;
         city: string;
         state: string;
-        zip: string;
+        street: string;
+        address: string;
+        neighborhood: string;
+        addressNumber: string;
     };
+    type: "house" | "apartment",
+    transaction: "rent" | "sale",
     images: string[];
-    brokerId: string;
+    active: boolean;
+    broker_id: string;
 };
 
 export interface User {
