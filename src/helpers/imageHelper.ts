@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import fs from "fs";
+import { resolve } from "path";
 
 interface Image {
     fieldname: string,
@@ -17,11 +18,12 @@ function removeExtension(filename: string): string {
 }
 
 async function deleteUncompressedImage(path: string): Promise<void> {
-    fs.rm(path, err => {
-        if (err) {
-            console.error(err)
-        }
-    })
+    try {
+        path = resolve(path)
+        await fs.promises.unlink(path)
+    } catch (err) {
+        console.error(err)
+    }
 }
 
 export async function compressImageToWebp(image: Image, destination: string): Promise<string> {
@@ -41,5 +43,5 @@ export async function compressImageToWebp(image: Image, destination: string): Pr
         }
         )
 
-        return `${removeExtension(filename)}_c.webp`
+    return `${removeExtension(filename)}_c.webp`
 }

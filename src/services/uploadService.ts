@@ -8,7 +8,7 @@ import { successResponse, errorResponse } from '../helpers/responseHelper'
 const router = Router();
 
 // Uploads - Multer config
-const UPLOAD_PATH = path.join(__dirname + '/../public/upload/')
+const UPLOAD_PATH = path.join(__dirname + '/../public/upload/properties')
 const upload: Multer = multerConfig(UPLOAD_PATH)
 
 router.post('/images/property', upload.array('images', 10), async (req, res) => {
