@@ -32,7 +32,7 @@ export async function compressImageToWebp(image: Image, destination: string): Pr
     destination = `${removeExtension(path)}_c.webp`
 
     sharp(path)
-        .webp({ quality: 80 })
+        .webp({ quality: 70 })
         .toFile(destination)
         .then(() => {
             deleteUncompressedImage(path)

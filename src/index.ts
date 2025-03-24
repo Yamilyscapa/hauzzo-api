@@ -4,9 +4,9 @@ import router from './routes/'
 import jsonParser from './middleware/jsonParser'
 import staticDir from './helpers/staticDir'
 import path from 'path'
+
 // Types
 import type { Application, NextFunction, Request, Response } from 'express'
-import multer from 'multer'
 
 // Initializations
 dotenv()
@@ -20,7 +20,7 @@ app.use((req: Request, res: Response, next: NextFunction) => jsonParser(express.
 app.use(router)
 
 // Static files
-app.use('public', express.static(path.join(__dirname, 'public')))
+app.use('/public', express.static(path.join(__dirname, 'public/upload')))
 
 // Constants
 const PORT = process.env.PORT || 8080

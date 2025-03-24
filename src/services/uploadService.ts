@@ -15,7 +15,7 @@ router.post('/images/property', upload.array('images', 10), async (req, res) => 
     try {
         const images = req.files as Express.Multer.File[]
         const { HOST, PORT } = process.env ?? ''
-        const ENDPOINT = 'upload/images/property'
+        const ENDPOINT = 'public/properties'
         const URL = `${HOST}:${PORT}/${ENDPOINT}`
 
         let imagesURLs = Promise.all(images.map(async (image) => {
@@ -27,6 +27,7 @@ router.post('/images/property', upload.array('images', 10), async (req, res) => 
         successResponse(res, await imagesURLs, 'Images uploaded', 201)
     } catch (err) {
         console.error(err)
+        errorResponse(res, 'Error uploading images', 400)
     }
 })
 
