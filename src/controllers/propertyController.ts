@@ -2,16 +2,51 @@ import { pool } from "../database/client";
 import { Property } from "../types/global";
 import { getBrokerById } from './brokerController'
 import { validate } from 'uuid'
+import axios from "axios";
 
 interface stdRes {
-    property: Property | Property[] | null,
+    data: any,
     error: any
 }
+
+export async function handleImagesUpload(images: Express.Multer.File[]): Promise<stdRes> {
+    let response: stdRes = {
+        data: null,
+        error: null
+    }
+
+    try {
+        const body = new FormData()
+
+        // Append each image to the body
+        images.forEach(image => {
+            const blob = new Blob([image.buffer], { type: image.mimetype })
+            body.append(image.fieldname, blob, image.originalname)
+        })
+
+        const { HOST, PORT } = process.env ?? ''
+        const ENDPOINT = 'upload/images/property'
+        const URL = `${HOST}:${PORT}/${ENDPOINT}`
+
+        const res = await axios.post(URL, body, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+
+        response.data = res.data.data
+        return response
+    } catch (error) {
+        response.error = error
+        return response
+    }
+}
+
 
 // GET
 export async function findManyProperties(limit?: number): Promise<stdRes> {
     let response: stdRes = {
-        property: null,
+        data: null,
         error: null
     }
 
@@ -20,7 +55,7 @@ export async function findManyProperties(limit?: number): Promise<stdRes> {
         if (limit) query += ` LIMIT ${limit}`
 
         const { rows: properties } = await pool.query(query)
-        response.property = properties
+        response.data = properties
 
         if (properties.length === 0) {
             response.error = 'No properties found'
@@ -35,13 +70,13 @@ export async function findManyProperties(limit?: number): Promise<stdRes> {
 
 export async function findOneProperty(id: string): Promise<stdRes> {
     let response: stdRes = {
-        property: null,
+        data: null,
         error: null
     }
 
     try {
-        const { rows: property } = await pool.query('SELECT * FROM properties WHERE id = $1', [id])
-        response.property = property[0]
+        const { rows: data } = await pool.query('SELECT * FROM properties WHERE id = $1', [id])
+        response.data = data[0]
 
         return response
     } catch (error) {
@@ -53,12 +88,12 @@ export async function findOneProperty(id: string): Promise<stdRes> {
 // POST
 export async function createProperty(property: Property, brokerId: string): Promise<stdRes> {
     let response: stdRes = {
-        property: null,
+        data: null,
         error: null
     }
 
     try {
-        const {
+        let {
             title,
             description,
             price,
@@ -68,10 +103,9 @@ export async function createProperty(property: Property, brokerId: string): Prom
             parking,
             type,
             location,
-            images,
             transaction
         } = property;
-        const requiredFields = ['title', 'description', 'price', 'tags', 'bedrooms', 'bathrooms', 'parking', 'type', 'images', 'transaction']
+        const requiredFields = ['title', 'description', 'price', 'tags', 'bedrooms', 'bathrooms', 'parking', 'type', 'transaction']
 
         // Validate that all of the data is present
         for (const key of requiredFields) {
@@ -90,15 +124,15 @@ export async function createProperty(property: Property, brokerId: string): Prom
         }
 
         // Validate that the location data is complete
-        Object.entries(location).forEach(([key, value], index) => {
-            const locationRequiredFields = ['address', 'city', 'state', 'zip']
-            const includesAll = locationRequiredFields.every(field => Object.keys(location).includes(field))
+        const locationRequiredFields = ['address', 'city', 'state', 'zip']
+        const locationJson = JSON.parse(location as any)
 
-            if (!includesAll) {
-                response.error = 'Missing location data (address, city, state, zip)'
-                return response
-            }
-        })
+        const includesAll = locationRequiredFields.every(field => Object.keys(locationJson).includes(field))
+
+        if (!includesAll) {
+            response.error = 'Missing location data (address, city, state, zip)'
+            return response
+        }
 
         // Validate that the broker exists
         if (!brokerId) {
@@ -119,8 +153,8 @@ export async function createProperty(property: Property, brokerId: string): Prom
         // Insert into database
         const { rows } = await pool.query(
             `INSERT INTO properties 
-        (title, description, price, tags, bedrooms, bathrooms, parking, location, type, images, broker_id, transaction) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+        (title, description, price, tags, bedrooms, bathrooms, parking, location, type, broker_id, transaction) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
         RETURNING *`,
             [
                 title,
@@ -132,18 +166,17 @@ export async function createProperty(property: Property, brokerId: string): Prom
                 parking,
                 JSON.stringify(location), // Stringify to store as JSON in Postgres
                 type,
-                images,
                 brokerId,
                 transaction
             ]
         );
 
         if (!rows[0]) {
-            response.error = 'Error creating property'
+            response.error = 'Error creating data'
             return response
         }
 
-        response.property = rows[0]
+        response.data = rows[0]
         return response
     } catch (error) {
         response.error = error
@@ -154,29 +187,29 @@ export async function createProperty(property: Property, brokerId: string): Prom
 // EDIT
 export async function editProperty(id: string, { title, description, tags, price, location }: Property): Promise<stdRes> {
     let response: stdRes = {
-        property: null,
+        data: null,
         error: null
     }
 
     if (!validate(id)) {
-        response.error = 'Invalid property ID'
+        response.error = 'Invalid data ID'
         return response
     }
 
-    const { property: propertyT, error } = await findOneProperty(id)
-    const property = propertyT as Property
+    const { data: property, error } = await findOneProperty(id)
+    const data = property as Property
 
     if (error) {
         response.error = error
         return response
-    } else if (!property) {
-        response.error = 'Property not found'
+    } else if (!data) {
+        response.error = 'data not found'
         return response
     }
 
     try {
         // Convert to key - values to make dynacmic the query
-        const currentProperty = {
+        const currentdata = {
             "title": title,
             "description": description,
             "tags": tags,
@@ -185,16 +218,16 @@ export async function editProperty(id: string, { title, description, tags, price
         }
 
         const currentLocation: Property['location'] = {
-            address: property.location.address,
-            addressNumber: property.location.addressNumber,
-            street: property.location.street,
-            neighborhood: property.location.neighborhood,
-            city: property.location.city,
-            state: property.location.state,
-            zip: property.location.zip,
+            address: data.location.address,
+            addressNumber: data.location.addressNumber,
+            street: data.location.street,
+            neighborhood: data.location.neighborhood,
+            city: data.location.city,
+            state: data.location.state,
+            zip: data.location.zip,
         }
 
-        const queryValues: (string | null)[] = Object.entries(currentProperty)
+        const queryValues: (string | null)[] = Object.entries(currentdata)
             .map(([key, value]) => {
                 // Validate value is not empty
                 if (value === " ") {
@@ -211,7 +244,7 @@ export async function editProperty(id: string, { title, description, tags, price
 
                 // Merge location data without overwriting the rest of the location data
                 if (key === "location") {
-                    if (!Array.isArray(property)) {
+                    if (!Array.isArray(data)) {
 
                         function getCommonKeys(obj1: Record<string, any>, obj2: Record<string, any>): Record<string, any> {
                             return Object.keys(obj1)
@@ -224,8 +257,8 @@ export async function editProperty(id: string, { title, description, tags, price
 
                         const newLocation = getCommonKeys(currentLocation, value as Property['location'])
 
-                        if (Object.keys(property.location).length === 0) return null
-                        value = JSON.stringify({ ...property.location, ...(newLocation) })
+                        if (Object.keys(data.location).length === 0) return null
+                        value = JSON.stringify({ ...data.location, ...(newLocation) })
                     }
                 }
 
@@ -247,7 +280,7 @@ export async function editProperty(id: string, { title, description, tags, price
 
         const { rows } = await pool.query(query)
 
-        response.property = rows[0]
+        response.data = rows[0]
         return response
     } catch (error) {
         response.error = error
@@ -255,6 +288,43 @@ export async function editProperty(id: string, { title, description, tags, price
     }
 }
 
+export async function updatePropertyImages(id: string, images: string[]) {
+    const response: stdRes = {
+        data: null,
+        error: null
+    }
+    
+    if (!validate(id)) {
+        response.error = 'Invalid data ID'
+        return response
+    }
+
+    if (!images) {
+        response.error = 'No images to update'
+        return response
+    }
+
+    try {
+        const query = {
+            text: `UPDATE properties SET images = $1 WHERE id = $2 RETURNING *`,
+            values: [images, id]
+        }
+        const { rows } = await pool.query(query)
+
+        if (!rows[0]) {
+            response.error = 'Error updating data'
+            return response
+        }
+
+        response.data = rows[0]
+        return response
+    } catch (error) {
+        response.error = error
+        return response
+    }
+
+}
+
 // DELETE
-export async function deleteProperty(id: string) {
+export async function deletedata(id: string) {
 }

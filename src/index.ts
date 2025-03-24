@@ -2,8 +2,10 @@ import express from 'express'
 import { config as dotenv } from 'dotenv'
 import router from './routes/'
 import jsonParser from './middleware/jsonParser'
+import path from 'path'
 // Types
 import type { Application, NextFunction, Request, Response } from 'express'
+import multer from 'multer'
 
 // Initializations
 dotenv()
@@ -14,6 +16,9 @@ app.use((req: Request, res: Response, next: NextFunction) => jsonParser(express.
 
 // Router
 app.use(router)
+
+// Static files
+app.use(express.static(path.join(__dirname, 'public')))
 
 // Constants
 const PORT = process.env.PORT || 8080
