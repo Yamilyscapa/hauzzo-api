@@ -1,7 +1,8 @@
 function validatePassword(password: string): boolean {
-    const REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const REGEX =
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
 
-    return REGEX.test(password)
+  return REGEX.test(password)
 }
 
-export default validatePassword;
+export default validatePassword

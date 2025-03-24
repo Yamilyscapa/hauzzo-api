@@ -9,21 +9,21 @@ export const pool = new Pool({
   host: process.env.DB_HOST,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: <number>(process.env.DB_PORT || 0)
+  port: <number>(process.env.DB_PORT || 0),
 })
 
 async function testConnection() {
-   try {
-    await pool.connect();
-    console.log("✅ Conectado a PostgreSQL");
+  try {
+    await pool.connect()
+    console.log('✅ Conectado a PostgreSQL')
 
     // Verificar si la tabla existe
     const res = await pool.query(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
-    );
+    )
   } catch (error) {
-    console.error("❌ Error en la conexión:", error);
+    console.error('❌ Error en la conexión:', error)
   }
 }
 
-testConnection();
+testConnection()

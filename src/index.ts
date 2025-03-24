@@ -11,10 +11,12 @@ import type { Application, NextFunction, Request, Response } from 'express'
 // Initializations
 dotenv()
 staticDir()
-const app: Application = express();
+const app: Application = express()
 
 // Middleware with error validation
-app.use((req: Request, res: Response, next: NextFunction) => jsonParser(express.json, req, res, next))
+app.use((req: Request, res: Response, next: NextFunction) =>
+  jsonParser(express.json, req, res, next)
+)
 
 // Router
 app.use(router)
@@ -27,5 +29,5 @@ const PORT = process.env.PORT || 8080
 
 // Server
 app.listen(PORT, () => {
-    console.log('Server listening on port:', PORT);
+  console.log('Server listening on port:', PORT)
 })
