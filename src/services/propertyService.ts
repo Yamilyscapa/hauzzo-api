@@ -18,27 +18,33 @@ router.post('/create', upload.array('images', 10), auth, async (req: Authenticat
     try {
         const propertyData = req.body
         const brokerId = req.userId || ''
-        
-        const files: Express.Multer.File[] = req.files as Express.Multer.File[]
-        
-        let { data: images, error: imagesError } = await handleImagesUpload(files)
-        
-        const { data: property, error } = await createProperty(propertyData as Property, brokerId)
 
-        if (property && images) {
-            const { error: imagesUpdateError } = await updatePropertyImages(property.id, images)
-            if (imagesUpdateError) {
-                return errorResponse(res, imagesUpdateError, 400)
+        const files: Express.Multer.File[] = req.files as Express.Multer.File[]
+
+
+        let { data: property, error } = await createProperty(propertyData as Property, brokerId)
+
+        if (req.files) {
+            const { data: images, error: imagesError } = await handleImagesUpload(files)
+            if (imagesError) {
+                return errorResponse(res, imagesError, 400)
             }
+
+            const { data: updatedProperty, error: updateError } = await updatePropertyImages(property?.id, images)
+            if (updateError) {
+                return errorResponse(res, updateError, 400)
+            }
+
+            property = updatedProperty
         }
-        
+
         if (error) {
             return errorResponse(res, error, 400)
         } else if (!property) {
             return errorResponse(res, error, 400)
         }
-        
-        successResponse(res, {}, 'Property created', 201)
+
+        successResponse(res, property, 'Property created', 201)
     } catch (error) {
         errorResponse(res, 'Error creating the property', 400)
     }
