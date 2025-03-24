@@ -35,3 +35,13 @@ logs/
 # dev
 .todo
 .rest
+
+# images
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+
+# Ignore system files
+.DS_Store
