@@ -45,3 +45,8 @@ logs/
 
 # Ignore system files
 .DS_Store
+
+# Bun-specific
+bun.lockb
+bunfig.toml
+.bun/
