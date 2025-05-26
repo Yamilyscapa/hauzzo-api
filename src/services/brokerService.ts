@@ -12,7 +12,7 @@ import {
 } from '../controllers/brokerController'
 import { Broker } from '../types/global'
 
-// POST /brokers/new
+// POST /brokers/new - Must come before /:id to prevent 'new' being treated as an ID
 router.post('/new', async (req: Request, res: Response) => {
   try {
     const body = req.body
@@ -21,7 +21,7 @@ router.post('/new', async (req: Request, res: Response) => {
       errorResponse(res, 'Empty body', 400)
       return
     }
-
+    
     const { broker, error } = await createBroker(body)
 
     if (error) {
@@ -39,31 +39,7 @@ router.post('/new', async (req: Request, res: Response) => {
   }
 })
 
-// GET /brokers/:id
-router.get('/:id', async (req: Request, res: Response) => {
-  try {
-    const id: string = req.params.id
-
-    if (!id) {
-      errorResponse(res, 'Invalid id', 400)
-      return
-    }
-
-    const { broker, error } = await getBrokerById(id)
-
-    if (error) {
-      errorResponse(res, error.message, 400, error)
-    } else if (!broker) {
-      errorResponse(res, 'Broker not found', 404)
-    } else {
-      successResponse(res, broker, 'Broker found', 200)
-    }
-  } catch (error) {
-    errorResponse(res, 'Error finding the broker', 400)
-  }
-})
-
-// GET /brokers/:email
+// GET /brokers/email/:email - Must come before /:id
 router.get('/email/:email', async (req: Request, res: Response) => {
   try {
     const email: string = req.params.email
@@ -87,6 +63,7 @@ router.get('/email/:email', async (req: Request, res: Response) => {
   }
 })
 
+// PUT /brokers/edit/:id - Must come before /:id
 router.put('/edit/:id', async (req: Request, res: Response) => {
   try {
     const id: string = req.params.id
@@ -116,6 +93,30 @@ router.put('/edit/:id', async (req: Request, res: Response) => {
     }
   } catch (error) {
     errorResponse(res, 'Error updating the broker', 400)
+  }
+})
+
+// GET /brokers/:id - Must come last as it's the most generic route
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const id: string = req.params.id
+
+    if (!id) {
+      errorResponse(res, 'Invalid id', 400)
+      return
+    }
+
+    const { broker, error } = await getBrokerById(id)
+
+    if (error) {
+      errorResponse(res, error.message, 400, error)
+    } else if (!broker) {
+      errorResponse(res, 'Broker not found', 404)
+    } else {
+      successResponse(res, broker, 'Broker found', 200)
+    }
+  } catch (error) {
+    errorResponse(res, 'Error finding the broker', 400)
   }
 })
 

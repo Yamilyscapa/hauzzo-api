@@ -16,17 +16,18 @@ export async function createBroker(body: Broker): Promise<stdRes> {
     broker: null,
     error: null,
   }
+
+  // Define the role of the broker
   const ROLE = 'broker'
 
   try {
     const { firstName, lastName, email, phone, password } = body
-    const id = v4()
+    const id = v4()    
 
     // Check if the required fields are present
     if (!firstName || !lastName || !email || !password) {
       throw new Error('Missing required fields')
     }
-
 
     if (email && !validateEmail(email)) {
       throw new Error('Invalid email format')
@@ -53,7 +54,13 @@ export async function createBroker(body: Broker): Promise<stdRes> {
       values: [firstName, lastName, email, phone, hashedPassword, ROLE, id],
     }
 
+    console.log(query);
+    
+
     const { rows } = await pool.query(query)
+
+    console.log(query);
+    
 
     response.broker = rows[0]
     response.error = null
@@ -135,6 +142,7 @@ export async function getBrokerById(id: string): Promise<stdRes> {
   }
 
   try {
+    console.log('getBrokerById - Received ID:', id);
     const query = {
       text: 'SELECT * FROM brokers WHERE id = $1',
       values: [id],
