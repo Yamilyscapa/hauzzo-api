@@ -3,7 +3,7 @@ import { Broker } from '../types/global'
 import { hashPassword } from '../utils/passwordHash'
 import validateEmail from '../utils/emailValidation.'
 import validatePassword from '../utils/passwordValidation'
-import { v4 } from 'uuid'
+import { v4 as uuid4 } from 'uuid'
 
 // Standarize the response of the service functions
 interface stdRes {
@@ -22,7 +22,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
   try {
     const { firstName, lastName, email, phone, password } = body
-    const id = v4()    
+    const generatedId = uuid4() // Generate a unique ID for the broker    
 
     // Check if the required fields are present
     if (!firstName || !lastName || !email || !password) {
@@ -51,7 +51,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
     const query = {
       text: 'INSERT INTO brokers (first_name, last_name, email, phone, password, role, id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      values: [firstName, lastName, email, phone, hashedPassword, ROLE, id],
+      values: [firstName, lastName, email, phone, hashedPassword, ROLE, generatedId],
     }
 
     console.log(query);
