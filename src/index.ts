@@ -4,6 +4,7 @@ import router from './routes/'
 import jsonParser from './middleware/jsonParser'
 import staticDir from './helpers/staticDir'
 import path from 'path'
+import cors from 'cors'
 
 // Types
 import type { Application, NextFunction, Request, Response } from 'express'
@@ -17,6 +18,13 @@ const app: Application = express()
 app.use((req: Request, res: Response, next: NextFunction) =>
   jsonParser(express.json, req, res, next)
 )
+
+// CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}))
 
 // Router
 app.use(router)
