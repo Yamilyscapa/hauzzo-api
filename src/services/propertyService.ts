@@ -13,7 +13,22 @@ import { auth, AuthenticatedRequest } from '../middleware/auth'
 import multer from 'multer'
 
 const router = Router()
-const upload = multer()
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only images
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Types
 import { Property } from '../types/global'
@@ -23,47 +38,46 @@ router.post(
   '/create',
   upload.array('images', 10),
   auth,
-  async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<any> => {
+  async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const propertyData = req.body
       const brokerId = req.userId || ''
 
-      const files: Express.Multer.File[] = req.files as Express.Multer.File[]
-
+      // Create property first
       let { data: property, error } = await createProperty(
         propertyData as Property,
         brokerId
       )
 
-      if (req.files) {
-        const { data: images, error: imagesError } =
-          await handleImagesUpload(files)
+      if (error) {
+        return errorResponse(res, error, 400)
+      }
+
+      // Handle image upload if files are present
+      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        console.log(`Processing ${req.files.length} images...`);
+        
+        const { data: images, error: imagesError } = await handleImagesUpload(req.files)
+        
         if (imagesError) {
+          console.error('Image upload error:', imagesError);
           return errorResponse(res, imagesError, 400)
         }
 
-        const { data: updatedProperty, error: updateError } =
-          await updatePropertyImages(property?.id, images)
-        if (updateError) {
-          return errorResponse(res, updateError, 400)
+        if (images && images.length > 0) {
+          const { data: updatedProperty, error: updateError } = await updatePropertyImages(property?.id, images)
+          if (updateError) {
+            console.error('Property update error:', updateError);
+            return errorResponse(res, updateError, 400)
+          }
+          property = updatedProperty
         }
-
-        property = updatedProperty
-      }
-
-      if (error) {
-        return errorResponse(res, error, 400)
-      } else if (!property) {
-        return errorResponse(res, error, 400)
       }
 
       successResponse(res, property, 'Property created', 201)
-    } catch (error) {
-      errorResponse(res, 'Error creating the property', 400)
+    } catch (error: any) {
+      console.error('Property creation error:', error);
+      errorResponse(res, error.message || 'Error creating the property', 400)
     }
   }
 )
