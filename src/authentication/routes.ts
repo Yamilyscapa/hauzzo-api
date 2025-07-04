@@ -3,9 +3,9 @@ import type { Request, Response } from 'express'
 const router = Router()
 
 // Imports
-import { auth } from '../controllers/authController'
-import { signAuth } from '../middleware/auth'
-import { successResponse, errorResponse } from '../helpers/responseHelper'
+import { auth } from './controller'
+import { signAuth } from '../shared/auth'
+import { successResponse, errorResponse } from '../shared/responseHelper'
 
 router.post('/broker', async (req: Request, res: Response) => {
   try {

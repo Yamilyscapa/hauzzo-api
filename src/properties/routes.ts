@@ -7,9 +7,9 @@ import {
   findOneProperty,
   handleImagesUpload,
   updatePropertyImages,
-} from '../controllers/propertyController'
-import { successResponse, errorResponse } from '../helpers/responseHelper'
-import { auth, AuthenticatedRequest } from '../middleware/auth'
+} from './controller'
+import { successResponse, errorResponse } from '../shared/responseHelper'
+import { auth, AuthenticatedRequest } from '../shared/auth'
 import multer from 'multer'
 
 const router = Router()
@@ -31,7 +31,7 @@ const upload = multer({
 });
 
 // Types
-import { Property } from '../types/global'
+import { Property } from '../shared/global'
 
 // POST
 router.post(

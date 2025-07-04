@@ -1,6 +1,6 @@
-import { getBrokerByEmail } from './brokerController'
-import { comparePassword } from '../utils/passwordHash'
-import { Broker } from '../types/global'
+import { getBrokerByEmail } from '../brokers/controller'
+import { comparePassword } from '../shared/passwordHash'
+import { Broker } from '../shared/global'
 
 // Standarize the response of the service functions
 interface stdRes {

@@ -1,4 +1,4 @@
-import { Error } from '../types/global'
+import { Error } from './global'
 
 export default function errorHelper(message: string, status: number = 400) {
   console.log(message)

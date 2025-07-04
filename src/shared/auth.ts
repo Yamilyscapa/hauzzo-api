@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { JwtPayload } from 'jsonwebtoken'
-import { errorResponse } from '../helpers/responseHelper'
-import { Broker, User } from '../types/global'
+import { errorResponse } from './responseHelper'
+import { Broker, User } from './global'
 
 export interface AuthenticatedRequest extends Request {
   userId?: string

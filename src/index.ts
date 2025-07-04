@@ -1,8 +1,8 @@
 import express from 'express'
 import { config as dotenv } from 'dotenv'
 import router from './routes/'
-import jsonParser from './middleware/jsonParser'
-import staticDir from './helpers/staticDir'
+import jsonParser from './shared/jsonParser'
+import staticDir from './shared/staticDir'
 import path from 'path'
 import cors from 'cors'
 

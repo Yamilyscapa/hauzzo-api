@@ -1,5 +1,5 @@
 import { pool } from '../database/client'
-import { Property } from '../types/global'
+import { Property } from '../shared/global'
 
 interface StdRes<T> {
     data?: T
