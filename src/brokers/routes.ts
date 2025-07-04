@@ -12,7 +12,6 @@ import {
 } from './controller'
 import { Broker } from '@shared/global'
 
-// POST /brokers/new - Must come before /:id to prevent 'new' being treated as an ID
 router.post('/new', async (req: Request, res: Response) => {
   try {
     const body = req.body
@@ -39,7 +38,6 @@ router.post('/new', async (req: Request, res: Response) => {
   }
 })
 
-// GET /brokers/email/:email - Must come before /:id
 router.get('/email/:email', async (req: Request, res: Response) => {
   try {
     const email: string = req.params.email
@@ -63,7 +61,6 @@ router.get('/email/:email', async (req: Request, res: Response) => {
   }
 })
 
-// PUT /brokers/edit/:id - Must come before /:id
 router.put('/edit/:id', async (req: Request, res: Response) => {
   try {
     const id: string = req.params.id
@@ -96,7 +93,6 @@ router.put('/edit/:id', async (req: Request, res: Response) => {
   }
 })
 
-// GET /brokers/:id - Must come last as it's the most generic route
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const id: string = req.params.id

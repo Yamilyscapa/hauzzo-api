@@ -40,6 +40,7 @@ Create a `.env` file with:
 ```env
 DATABASE_URL=postgresql://...
 JWT_SECRET=your-jwt-secret
+JWT_REFRESH_SECRET=your-jwt-refresh-secret
 IMAGEKIT_API_PUBLIC_KEY=your-imagekit-public-key
 IMAGEKIT_API_KEY=your-imagekit-private-key
 IMAGEKIT_ENDPOINT_URL=your-imagekit-endpoint
@@ -49,7 +50,11 @@ PORT=8080
 ## 📚 API Endpoints
 
 ### Authentication
-- `POST /auth/broker` - Broker login
+- `POST /auth/broker/signup` - Broker registration and login
+- `POST /auth/broker/login` - Broker login
+- `POST /auth/refresh` - Refresh access tokens
+- `POST /auth/logout` - Logout (revoke refresh token)
+- `POST /auth/logout-all` - Logout from all devices
 
 ### Properties
 - `GET /properties/all` - List all properties
@@ -73,7 +78,7 @@ PORT=8080
 ## 🏢 Business Domains
 
 ### Authentication
-Handles user and broker authentication, JWT token management.
+Handles user and broker authentication, registration, and JWT token management with refresh token rotation.
 
 ### Properties
 Core property management - creation, editing, image uploads, listing management.

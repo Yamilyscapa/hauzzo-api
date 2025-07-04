@@ -6,10 +6,25 @@ http://localhost:8080
 ```
 
 ## Authentication
-Most endpoints require JWT token authentication. Include the token in the `Authorization` header:
+Most endpoints require JWT token authentication. Include the access token in the `Authorization` header:
 ```
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <access_token>
 ```
+
+### Token Management
+- **Access tokens** expire after 15 minutes for security
+- **Refresh tokens** expire after 7 days
+- Use the `/auth/refresh` endpoint to get new tokens before access token expires
+- Store refresh tokens securely (they're stored in database for revocation)
+- Access tokens contain user info and expire quickly
+- Refresh tokens are used only for token renewal
+
+### Handling Token Expiration
+When you receive a `401` error with `"expired": true` in the error response:
+1. Call `/auth/refresh` with your refresh token
+2. Update your stored access token
+3. Retry the original request with the new access token
+4. If refresh fails, redirect user to login
 
 ## Standard Response Format
 
@@ -91,8 +106,52 @@ Authorization: Bearer <jwt_token>
 
 ## Authentication Endpoints
 
-### POST /auth/broker
-Login a broker and get JWT token.
+### POST /auth/broker/signup
+Create a new broker account and automatically log in.
+
+**Request Body:**
+```json
+{
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "phone": "string (optional)",
+  "password": "string"
+}
+```
+
+**Password Requirements:**
+- At least 8 characters
+- One uppercase letter
+- One lowercase letter
+- One number
+- One special character
+
+**Response (201):**
+```json
+{
+  "status": "Success",
+  "message": "Broker created and logged in successfully",
+  "data": {
+    "broker": {
+      "id": "uuid",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com",
+      "phone": "123-456-7890",
+      "role": "broker"
+    },
+    "accessToken": "jwt_access_token_string",
+    "refreshToken": "jwt_refresh_token_string"
+  }
+}
+```
+
+**Error Responses:**
+- `400`: Missing required fields, invalid email format, weak password, or broker already exists
+
+### POST /auth/broker/login
+Login a broker and get JWT tokens.
 
 **Request Body:**
 ```json
@@ -106,7 +165,7 @@ Login a broker and get JWT token.
 ```json
 {
   "status": "Success",
-  "message": "Successful request",
+  "message": "Login successful",
   "data": {
     "broker": {
       "id": "uuid",
@@ -116,14 +175,83 @@ Login a broker and get JWT token.
       "phone": "string",
       "role": "broker"
     },
-    "token": "jwt_token_string"
+    "accessToken": "jwt_access_token_string",
+    "refreshToken": "jwt_refresh_token_string"
   }
 }
 ```
 
 **Error Responses:**
-- `400`: Invalid credentials
+- `400`: Missing email or password
+- `401`: Invalid credentials
+
+### POST /auth/refresh
+Refresh expired access token using refresh token.
+
+**Request Body:**
+```json
+{
+  "refreshToken": "jwt_refresh_token_string"
+}
+```
+
+**Response (200):**
+```json
+{
+  "status": "Success",
+  "message": "Tokens refreshed successfully",
+  "data": {
+    "accessToken": "new_jwt_access_token_string",
+    "refreshToken": "new_jwt_refresh_token_string"
+  }
+}
+```
+
+**Error Responses:**
+- `400`: Missing refresh token
+- `401`: Invalid or expired refresh token
 - `404`: Broker not found
+
+### POST /auth/logout
+Logout and revoke refresh token.
+
+**Request Body:**
+```json
+{
+  "refreshToken": "jwt_refresh_token_string"
+}
+```
+
+**Response (200):**
+```json
+{
+  "status": "Success",
+  "message": "Logged out successfully",
+  "data": {}
+}
+```
+
+**Error Responses:**
+- `400`: Missing refresh token
+- `500`: Logout failed
+
+### POST /auth/logout-all
+Logout from all devices (requires authentication).
+
+**Authentication:** Required (JWT access token)
+
+**Response (200):**
+```json
+{
+  "status": "Success",
+  "message": "Logged out from all devices successfully",
+  "data": {}
+}
+```
+
+**Error Responses:**
+- `401`: Unauthorized
+- `500`: Logout failed
 
 ---
 

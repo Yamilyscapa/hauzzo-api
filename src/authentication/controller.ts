@@ -8,6 +8,7 @@ interface stdRes {
   error: any
 }
 
+// Authenticate a broker by email and password
 export async function auth(email: string, password: string): Promise<stdRes> {
   let response = {
     broker: null,
@@ -34,5 +35,6 @@ export async function auth(email: string, password: string): Promise<stdRes> {
     return response
   }
 
-  throw new Error('The provided password is incorrect')
+  response.error = 'The provided password is incorrect'
+  return response
 }
