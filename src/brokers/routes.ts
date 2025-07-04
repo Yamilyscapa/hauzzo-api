@@ -3,14 +3,14 @@ import type { Request, Response } from 'express'
 const router = Router()
 
 // Imports
-import { errorResponse, successResponse } from '../shared/responseHelper'
+import { errorResponse, successResponse } from '@shared/responseHelper'
 import {
   getBrokerById,
   getBrokerByEmail,
   createBroker,
   editBroker,
 } from './controller'
-import { Broker } from '../shared/global'
+import { Broker } from '@shared/global'
 
 // POST /brokers/new - Must come before /:id to prevent 'new' being treated as an ID
 router.post('/new', async (req: Request, res: Response) => {

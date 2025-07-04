@@ -1,8 +1,8 @@
 import { pool } from '../database/client'
-import { Broker } from '../shared/global'
-import { hashPassword } from '../shared/passwordHash'
-import validateEmail from '../shared/emailValidation.'
-import validatePassword from '../shared/passwordValidation'
+import { Broker } from '@shared/global'
+import { hashPassword } from '@shared/passwordHash'
+import validateEmail from '@shared/emailValidation.'
+import validatePassword from '@shared/passwordValidation'
 import { v4 as uuid4 } from 'uuid'
 
 // Standarize the response of the service functions

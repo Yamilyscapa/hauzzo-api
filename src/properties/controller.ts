@@ -1,5 +1,5 @@
 import { pool } from '../database/client'
-import { Property } from '../shared/global'
+import { Property } from '@shared/global'
 import { getBrokerById } from '../brokers/controller'
 import { validate } from 'uuid'
 import ImageKit from 'imagekit'

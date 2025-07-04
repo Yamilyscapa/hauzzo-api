@@ -1,8 +1,7 @@
 import express from 'express'
 import { config as dotenv } from 'dotenv'
 import router from './routes/'
-import jsonParser from './shared/jsonParser'
-import staticDir from './shared/staticDir'
+import jsonParser from '@shared/jsonParser'
 import path from 'path'
 import cors from 'cors'
 
@@ -11,7 +10,6 @@ import type { Application, NextFunction, Request, Response } from 'express'
 
 // Initializations
 dotenv()
-staticDir()
 const app: Application = express()
 
 // Middleware with error validation

@@ -8,8 +8,8 @@ import {
   handleImagesUpload,
   updatePropertyImages,
 } from './controller'
-import { successResponse, errorResponse } from '../shared/responseHelper'
-import { auth, AuthenticatedRequest } from '../shared/auth'
+import { successResponse, errorResponse } from '@shared/responseHelper'
+import { auth, AuthenticatedRequest } from '@shared/auth'
 import multer from 'multer'
 
 const router = Router()
@@ -31,7 +31,7 @@ const upload = multer({
 });
 
 // Types
-import { Property } from '../shared/global'
+import { Property } from '@shared/global'
 
 // POST
 router.post(

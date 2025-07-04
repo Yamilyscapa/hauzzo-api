@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { Request, Response } from 'express'
 
-import { successResponse, errorResponse } from '../shared/responseHelper'
+import { successResponse, errorResponse } from '@shared/responseHelper'
 import { findPropertyByDescription, findPropertyByTags } from './controller'
 
 const router = Router()

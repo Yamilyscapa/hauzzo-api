@@ -4,8 +4,8 @@ const router = Router()
 
 // Imports
 import { auth } from './controller'
-import { signAuth } from '../shared/auth'
-import { successResponse, errorResponse } from '../shared/responseHelper'
+import { signAuth } from '@shared/auth'
+import { successResponse, errorResponse } from '@shared/responseHelper'
 
 router.post('/broker', async (req: Request, res: Response) => {
   try {
