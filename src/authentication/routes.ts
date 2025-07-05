@@ -4,15 +4,19 @@ const router = Router()
 
 // Imports
 import { auth } from './controller'
-import { signAuth, verifyRefreshToken, auth as authMiddleware } from '@shared/auth'
+import {
+  signAuth,
+  verifyRefreshToken,
+  auth as authMiddleware,
+} from '@shared/auth'
 import { successResponse, errorResponse } from '@shared/responseHelper'
 import { getBrokerById, createBroker } from '../brokers/controller'
-import { 
-  storeRefreshToken, 
-  verifyRefreshToken as verifyRefreshTokenInDB, 
-  revokeRefreshToken, 
+import {
+  storeRefreshToken,
+  verifyRefreshToken as verifyRefreshTokenInDB,
+  revokeRefreshToken,
   revokeAllTokensForBroker,
-  rotateRefreshToken
+  rotateRefreshToken,
 } from '@shared/refreshTokenManager'
 
 router.post('/broker/signup', async (req: Request, res: Response) => {
@@ -38,23 +42,27 @@ router.post('/broker/signup', async (req: Request, res: Response) => {
 
     // Generate JWT tokens for the newly created broker
     const tokens = await signAuth(broker)
-    
+
     // Store refresh token in database
     const deviceInfo = req.headers['user-agent'] || 'Unknown device'
     await storeRefreshToken(broker.id, tokens.refreshToken, deviceInfo)
-    
-    successResponse(res, {
-      broker: {
-        id: broker.id,
-        firstName: broker.firstName,
-        lastName: broker.lastName,
-        email: broker.email,
-        phone: broker.phone,
-        role: broker.role
-      },
-      ...tokens
-    }, 'Broker created and logged in successfully', 201)
 
+    successResponse(
+      res,
+      {
+        broker: {
+          id: broker.id,
+          firstName: broker.firstName,
+          lastName: broker.lastName,
+          email: broker.email,
+          phone: broker.phone,
+          role: broker.role,
+        },
+        ...tokens,
+      },
+      'Broker created and logged in successfully',
+      201
+    )
   } catch (error) {
     errorResponse(res, 'Error creating the broker', 400)
   }
@@ -82,23 +90,27 @@ router.post('/broker/login', async (req: Request, res: Response) => {
     }
 
     const tokens = await signAuth(broker)
-    
+
     // Store refresh token in database
     const deviceInfo = req.headers['user-agent'] || 'Unknown device'
     await storeRefreshToken(broker.id, tokens.refreshToken, deviceInfo)
-    
-    successResponse(res, {
-      broker: {
-        id: broker.id,
-        firstName: broker.firstName,
-        lastName: broker.lastName,
-        email: broker.email,
-        phone: broker.phone,
-        role: broker.role
-      },
-      ...tokens
-    }, 'Login successful', 200)
 
+    successResponse(
+      res,
+      {
+        broker: {
+          id: broker.id,
+          firstName: broker.firstName,
+          lastName: broker.lastName,
+          email: broker.email,
+          phone: broker.phone,
+          role: broker.role,
+        },
+        ...tokens,
+      },
+      'Login successful',
+      200
+    )
   } catch (error) {
     errorResponse(res, 'Authentication failed', 401)
   }
@@ -115,7 +127,7 @@ router.post('/broker/refresh', async (req: Request, res: Response) => {
 
     // Verify refresh token in database
     const tokenData = await verifyRefreshTokenInDB(refreshToken)
-    
+
     if (!tokenData) {
       errorResponse(res, 'Invalid or expired refresh token', 401)
       return
@@ -130,13 +142,17 @@ router.post('/broker/refresh', async (req: Request, res: Response) => {
 
     // Generate new tokens
     const newTokens = await signAuth(broker)
-    
+
     // Rotate refresh token (revoke old + store new) using functional composition
     const deviceInfo = req.headers['user-agent'] || 'Unknown device'
-    await rotateRefreshToken(refreshToken, broker.id, newTokens.refreshToken, deviceInfo)
-    
-    successResponse(res, newTokens, 'Tokens refreshed successfully', 200)
+    await rotateRefreshToken(
+      refreshToken,
+      broker.id,
+      newTokens.refreshToken,
+      deviceInfo
+    )
 
+    successResponse(res, newTokens, 'Tokens refreshed successfully', 200)
   } catch (error) {
     errorResponse(res, 'Token refresh failed', 401)
   }
@@ -153,31 +169,33 @@ router.post('/broker/logout', async (req: Request, res: Response) => {
 
     // Revoke refresh token
     await revokeRefreshToken(refreshToken)
-    
+
     successResponse(res, {}, 'Logged out successfully', 200)
-
   } catch (error) {
     errorResponse(res, 'Logout failed', 500)
   }
 })
 
-router.post('/broker/logout-all', authMiddleware, async (req: any, res: Response) => {
-  try {
-    const brokerId = req.userId
+router.post(
+  '/broker/logout-all',
+  authMiddleware,
+  async (req: any, res: Response) => {
+    try {
+      const brokerId = req.userId
 
-    if (!brokerId) {
-      errorResponse(res, 'User ID not found', 400)
-      return
+      if (!brokerId) {
+        errorResponse(res, 'User ID not found', 400)
+        return
+      }
+
+      // Revoke all refresh tokens for this broker
+      await revokeAllTokensForBroker(brokerId)
+
+      successResponse(res, {}, 'Logged out from all devices successfully', 200)
+    } catch (error) {
+      errorResponse(res, 'Logout failed', 500)
     }
-
-    // Revoke all refresh tokens for this broker
-    await revokeAllTokensForBroker(brokerId)
-    
-    successResponse(res, {}, 'Logged out from all devices successfully', 200)
-
-  } catch (error) {
-    errorResponse(res, 'Logout failed', 500)
   }
-})
+)
 
 export default router

@@ -18,7 +18,9 @@ interface stdRes {
  * @param images - Array of files from multer
  * @returns Promise with uploaded image URLs or error
  */
-export async function handleImagesUpload(images: Express.Multer.File[]): Promise<stdRes> {
+export async function handleImagesUpload(
+  images: Express.Multer.File[]
+): Promise<stdRes> {
   let response: stdRes = {
     data: null,
     error: null,
@@ -36,7 +38,8 @@ export async function handleImagesUpload(images: Express.Multer.File[]): Promise
   const urlEndpoint = process.env.IMAGEKIT_ENDPOINT_URL
 
   if (!publicKey || !privateKey || !urlEndpoint) {
-    response.error = 'ImageKit configuration is missing. Please check environment variables.'
+    response.error =
+      'ImageKit configuration is missing. Please check environment variables.'
     return response
   }
 
@@ -48,19 +51,19 @@ export async function handleImagesUpload(images: Express.Multer.File[]): Promise
   })
 
   try {
-    const imageUrls: string[] = [];
+    const imageUrls: string[] = []
 
     // Process each image sequentially to prevent memory issues
     for (const image of images) {
       try {
         // Validate buffer data
         if (!image.buffer || image.buffer.length === 0) {
-          throw new Error('Invalid buffer data');
+          throw new Error('Invalid buffer data')
         }
 
         // Convert image buffer to base64 for upload
-        const base64Image = Buffer.from(image.buffer).toString('base64');
-        
+        const base64Image = Buffer.from(image.buffer).toString('base64')
+
         // Upload to ImageKit with optimized settings
         const result = await ImgKit.upload({
           file: base64Image,
@@ -70,16 +73,16 @@ export async function handleImagesUpload(images: Express.Multer.File[]): Promise
           responseFields: ['url', 'fileId', 'name'],
           extensions: [
             {
-              name: "google-auto-tagging",
+              name: 'google-auto-tagging',
               maxTags: 5,
-              minConfidence: 95
-            }
-          ]
-        });
-        
+              minConfidence: 95,
+            },
+          ],
+        })
+
         // Validate upload result
         if (!result || !result.url) {
-          throw new Error('Upload failed - no URL returned');
+          throw new Error('Upload failed - no URL returned')
         }
 
         // Construct CDN URL with optimizations for slideshow display
@@ -88,20 +91,20 @@ export async function handleImagesUpload(images: Express.Multer.File[]): Promise
         // - q-80: 80% quality
         // - ar-16-9: maintain 16:9 aspect ratio
         // - c-at_max: contain mode to prevent cropping
-        const fullUrl = `${urlEndpoint}/properties/${result.name}?tr=w-1200,f-webp,q-80,ar-16-9,c-at_max`;
-        imageUrls.push(fullUrl);
+        const fullUrl = `${urlEndpoint}/properties/${result.name}?tr=w-1200,f-webp,q-80,ar-16-9,c-at_max`
+        imageUrls.push(fullUrl)
       } catch (err) {
-        console.error(`Failed to upload image ${image.originalname}:`, err);
-        throw err;
+        console.error(`Failed to upload image ${image.originalname}:`, err)
+        throw err
       }
     }
-    
-    response.data = imageUrls;
-    return response;
+
+    response.data = imageUrls
+    return response
   } catch (error: any) {
-    console.error('Error in handleImagesUpload:', error);
+    console.error('Error in handleImagesUpload:', error)
     response.error = `Failed to upload images: ${error.message || 'Unknown error'}`
-    return response;
+    return response
   }
 }
 
@@ -127,7 +130,6 @@ export async function handleImagesUpload(images: Express.Multer.File[]): Promise
 //     const { HOST, PORT } = process.env ?? ''
 //     const ENDPOINT = 'upload/images/property'
 //     const URL = `${HOST}:${PORT}/${ENDPOINT}`
-
 
 //     const res = await axios.post(URL, body, {
 //       headers: {

@@ -20,7 +20,7 @@ router.post('/new', async (req: Request, res: Response) => {
       errorResponse(res, 'Empty body', 400)
       return
     }
-    
+
     const { broker, error } = await createBroker(body)
 
     if (error) {

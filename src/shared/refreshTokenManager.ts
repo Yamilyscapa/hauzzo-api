@@ -25,14 +25,16 @@ export async function storeRefreshToken(
       INSERT INTO refresh_tokens (broker_id, token_hash, expires_at, device_info)
       VALUES ($1, $2, $3, $4)
     `,
-    values: [brokerId, tokenHash, expiresAt, deviceInfo || null]
+    values: [brokerId, tokenHash, expiresAt, deviceInfo || null],
   }
 
   await pool.query(query)
 }
 
 // Verify refresh token exists and is valid
-export async function verifyRefreshToken(refreshToken: string): Promise<RefreshTokenData | null> {
+export async function verifyRefreshToken(
+  refreshToken: string
+): Promise<RefreshTokenData | null> {
   const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
 
   const query = {
@@ -42,7 +44,7 @@ export async function verifyRefreshToken(refreshToken: string): Promise<RefreshT
       AND expires_at > NOW() 
       AND revoked_at IS NULL
     `,
-    values: [tokenHash]
+    values: [tokenHash],
   }
 
   const { rows } = await pool.query(query)
@@ -59,21 +61,23 @@ export async function revokeRefreshToken(refreshToken: string): Promise<void> {
       SET revoked_at = NOW()
       WHERE token_hash = $1
     `,
-    values: [tokenHash]
+    values: [tokenHash],
   }
 
   await pool.query(query)
 }
 
 // Revoke all refresh tokens for a broker
-export async function revokeAllTokensForBroker(brokerId: string): Promise<void> {
+export async function revokeAllTokensForBroker(
+  brokerId: string
+): Promise<void> {
   const query = {
     text: `
       UPDATE refresh_tokens 
       SET revoked_at = NOW()
       WHERE broker_id = $1 AND revoked_at IS NULL
     `,
-    values: [brokerId]
+    values: [brokerId],
   }
 
   await pool.query(query)
@@ -83,7 +87,7 @@ export async function revokeAllTokensForBroker(brokerId: string): Promise<void> 
 export async function cleanupExpiredTokens(): Promise<void> {
   const query = {
     text: `SELECT cleanup_expired_refresh_tokens()`,
-    values: []
+    values: [],
   }
 
   await pool.query(query)
@@ -109,4 +113,4 @@ export async function rotateRefreshToken(
   // Compose functions: revoke old token then store new token
   await revokeRefreshToken(oldRefreshToken)
   await storeRefreshToken(brokerId, newRefreshToken, deviceInfo)
-} 
+}

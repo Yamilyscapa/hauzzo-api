@@ -1,17 +1,21 @@
 # Hauzzo API Documentation
 
 ## Base URL
+
 ```
 http://localhost:8080
 ```
 
 ## Authentication
+
 Most endpoints require JWT token authentication. Include the access token in the `Authorization` header:
+
 ```
 Authorization: Bearer <access_token>
 ```
 
 ### Token Management
+
 - **Access tokens** expire after 15 minutes for security
 - **Refresh tokens** expire after 7 days
 - Use the `/auth/refresh` endpoint to get new tokens before access token expires
@@ -20,7 +24,9 @@ Authorization: Bearer <access_token>
 - Refresh tokens are used only for token renewal
 
 ### Handling Token Expiration
+
 When you receive a `401` error with `"expired": true` in the error response:
+
 1. Call `/auth/refresh` with your refresh token
 2. Update your stored access token
 3. Retry the original request with the new access token
@@ -29,26 +35,33 @@ When you receive a `401` error with `"expired": true` in the error response:
 ## Standard Response Format
 
 ### Success Response
+
 ```json
 {
   "status": "Success",
   "message": "Request description",
-  "data": { /* response data */ }
+  "data": {
+    /* response data */
+  }
 }
 ```
 
 ### Error Response
+
 ```json
 {
   "status": "Error",
   "message": "Error description",
-  "error": { /* error details */ }
+  "error": {
+    /* error details */
+  }
 }
 ```
 
 ## Data Models
 
 ### Property
+
 ```typescript
 {
   id: string
@@ -77,6 +90,7 @@ When you receive a `401` error with `"expired": true` in the error response:
 ```
 
 ### Broker
+
 ```typescript
 {
   id: string
@@ -84,12 +98,13 @@ When you receive a `401` error with `"expired": true` in the error response:
   lastName: string
   email: string
   phone: string
-  password: string (hashed)
+  password: string(hashed)
   role: 'broker'
 }
 ```
 
 ### User
+
 ```typescript
 {
   id: string
@@ -97,7 +112,7 @@ When you receive a `401` error with `"expired": true` in the error response:
   lastName: string
   email: string
   phone: string
-  password: string (hashed)
+  password: string(hashed)
   role: 'user'
 }
 ```
@@ -107,9 +122,11 @@ When you receive a `401` error with `"expired": true` in the error response:
 ## Authentication Endpoints
 
 ### POST /auth/broker/signup
+
 Create a new broker account and automatically log in.
 
 **Request Body:**
+
 ```json
 {
   "firstName": "string",
@@ -121,6 +138,7 @@ Create a new broker account and automatically log in.
 ```
 
 **Password Requirements:**
+
 - At least 8 characters
 - One uppercase letter
 - One lowercase letter
@@ -128,6 +146,7 @@ Create a new broker account and automatically log in.
 - One special character
 
 **Response (201):**
+
 ```json
 {
   "status": "Success",
@@ -148,12 +167,15 @@ Create a new broker account and automatically log in.
 ```
 
 **Error Responses:**
+
 - `400`: Missing required fields, invalid email format, weak password, or broker already exists
 
 ### POST /auth/broker/login
+
 Login a broker and get JWT tokens.
 
 **Request Body:**
+
 ```json
 {
   "email": "string",
@@ -162,6 +184,7 @@ Login a broker and get JWT tokens.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -182,13 +205,16 @@ Login a broker and get JWT tokens.
 ```
 
 **Error Responses:**
+
 - `400`: Missing email or password
 - `401`: Invalid credentials
 
 ### POST /auth/refresh
+
 Refresh expired access token using refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "jwt_refresh_token_string"
@@ -196,6 +222,7 @@ Refresh expired access token using refresh token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -208,14 +235,17 @@ Refresh expired access token using refresh token.
 ```
 
 **Error Responses:**
+
 - `400`: Missing refresh token
 - `401`: Invalid or expired refresh token
 - `404`: Broker not found
 
 ### POST /auth/logout
+
 Logout and revoke refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "jwt_refresh_token_string"
@@ -223,6 +253,7 @@ Logout and revoke refresh token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -232,15 +263,18 @@ Logout and revoke refresh token.
 ```
 
 **Error Responses:**
+
 - `400`: Missing refresh token
 - `500`: Logout failed
 
 ### POST /auth/logout-all
+
 Logout from all devices (requires authentication).
 
 **Authentication:** Required (JWT access token)
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -250,6 +284,7 @@ Logout from all devices (requires authentication).
 ```
 
 **Error Responses:**
+
 - `401`: Unauthorized
 - `500`: Logout failed
 
@@ -258,14 +293,17 @@ Logout from all devices (requires authentication).
 ## Properties Endpoints
 
 ### GET /properties/all
+
 Get all properties with optional limit.
 
 **Query Parameters:**
+
 - `limit` (optional): number - Maximum number of properties to return
 
 **Example:** `GET /properties/all?limit=10`
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -300,35 +338,41 @@ Get all properties with optional limit.
 ```
 
 ### GET /properties/:id
+
 Get a specific property by ID.
 
 **Path Parameters:**
+
 - `id`: string - Property UUID
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
   "message": "Property found",
   "data": {
     "id": "uuid",
-    "title": "Beautiful House",
+    "title": "Beautiful House"
     // ... full property object
   }
 }
 ```
 
 **Error Responses:**
+
 - `404`: Property not found
 - `400`: Invalid property ID
 
 ### POST /properties/create
+
 Create a new property with optional images.
 
 **Authentication:** Required (JWT token)
 **Content-Type:** `multipart/form-data`
 
 **Form Data:**
+
 ```
 title: string
 description: string
@@ -344,6 +388,7 @@ images: File[] (optional, max 10 images, max 5MB each)
 ```
 
 **Example Request:**
+
 ```bash
 curl -X POST http://localhost:8080/properties/create \
   -H "Authorization: Bearer <jwt_token>" \
@@ -362,6 +407,7 @@ curl -X POST http://localhost:8080/properties/create \
 ```
 
 **Response (201):**
+
 ```json
 {
   "status": "Success",
@@ -369,24 +415,28 @@ curl -X POST http://localhost:8080/properties/create \
   "data": {
     "id": "uuid",
     "title": "Beautiful House",
-    "images": ["optimized_image_url1", "optimized_image_url2"],
+    "images": ["optimized_image_url1", "optimized_image_url2"]
     // ... full property object
   }
 }
 ```
 
 **Error Responses:**
+
 - `400`: Missing required fields, invalid data, or image upload failed
 - `401`: Unauthorized (invalid or missing token)
 
 ### PUT /properties/edit/:id
+
 Update an existing property.
 
 **Authentication:** Required (JWT token)
 **Path Parameters:**
+
 - `id`: string - Property UUID
 
 **Request Body:**
+
 ```json
 {
   "title": "string (optional)",
@@ -398,6 +448,7 @@ Update an existing property.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -409,6 +460,7 @@ Update an existing property.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid property ID or update data
 - `401`: Unauthorized
 - `404`: Property not found
@@ -418,9 +470,11 @@ Update an existing property.
 ## Brokers Endpoints
 
 ### POST /brokers/new
+
 Create a new broker account.
 
 **Request Body:**
+
 ```json
 {
   "firstName": "string",
@@ -432,6 +486,7 @@ Create a new broker account.
 ```
 
 **Password Requirements:**
+
 - At least 8 characters
 - One uppercase letter
 - One lowercase letter
@@ -439,6 +494,7 @@ Create a new broker account.
 - One special character
 
 **Response (201):**
+
 ```json
 {
   "status": "Success",
@@ -455,15 +511,19 @@ Create a new broker account.
 ```
 
 **Error Responses:**
+
 - `400`: Missing required fields, invalid email format, weak password, or broker already exists
 
 ### GET /brokers/:id
+
 Get broker by ID.
 
 **Path Parameters:**
+
 - `id`: string - Broker UUID
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -480,16 +540,20 @@ Get broker by ID.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid broker ID
 - `404`: Broker not found
 
 ### GET /brokers/email/:email
+
 Get broker by email address.
 
 **Path Parameters:**
+
 - `email`: string - Broker email address
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -501,16 +565,20 @@ Get broker by email address.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid email
 - `404`: Broker not found
 
 ### PUT /brokers/edit/:id
+
 Update broker information.
 
 **Path Parameters:**
+
 - `id`: string - Broker UUID
 
 **Request Body:**
+
 ```json
 {
   "firstName": "string (optional)",
@@ -522,6 +590,7 @@ Update broker information.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -533,6 +602,7 @@ Update broker information.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid broker ID, empty body, or invalid data format
 - `404`: Broker not found
 
@@ -541,12 +611,15 @@ Update broker information.
 ## Users Endpoints
 
 ### GET /users/:id
+
 Get user by ID.
 
 **Path Parameters:**
+
 - `id`: string - User UUID
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -563,6 +636,7 @@ Get user by ID.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid user ID
 - `404`: User not found
 
@@ -571,9 +645,11 @@ Get user by ID.
 ## Search Endpoints
 
 ### POST /search/tags
+
 Search properties by tags.
 
 **Request Body:**
+
 ```json
 {
   "query": ["pool", "garden", "garage"]
@@ -581,6 +657,7 @@ Search properties by tags.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -594,14 +671,17 @@ Search properties by tags.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid query format
 - `404`: No results found
 - `500`: Database query failed
 
 ### POST /search/description
+
 Search properties by description text.
 
 **Request Body:**
+
 ```json
 {
   "query": "beautiful house with pool"
@@ -609,6 +689,7 @@ Search properties by description text.
 ```
 
 **Response (200):**
+
 ```json
 {
   "status": "Success",
@@ -622,6 +703,7 @@ Search properties by description text.
 ```
 
 **Error Responses:**
+
 - `400`: Invalid query format
 - `404`: No results found
 - `500`: Database query failed
@@ -630,24 +712,27 @@ Search properties by description text.
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| 200  | Success |
-| 201  | Created |
-| 400  | Bad Request - Invalid input data |
-| 401  | Unauthorized - Invalid or missing token |
-| 404  | Not Found - Resource doesn't exist |
+| Code | Description                                      |
+| ---- | ------------------------------------------------ |
+| 200  | Success                                          |
+| 201  | Created                                          |
+| 400  | Bad Request - Invalid input data                 |
+| 401  | Unauthorized - Invalid or missing token          |
+| 404  | Not Found - Resource doesn't exist               |
 | 500  | Internal Server Error - Database or server error |
 
 ## Image Upload Details
 
 ### Supported Formats
+
 - JPEG, PNG, WebP
 - Maximum file size: 5MB per image
 - Maximum images per property: 10
 
 ### Image Processing
+
 Images are automatically optimized:
+
 - Resized to 1200px width (height auto-adjusts)
 - Converted to WebP format
 - 80% quality compression
@@ -655,6 +740,7 @@ Images are automatically optimized:
 - Hosted on ImageKit CDN
 
 ### Example Image URL
+
 ```
 https://ik.imagekit.io/your-endpoint/properties/image-name.webp?tr=w-1200,f-webp,q-80,ar-16-9,c-at_max
-``` 
+```

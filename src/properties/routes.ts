@@ -23,12 +23,12 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     // Accept only images
     if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
+      cb(null, true)
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image files are allowed'))
     }
-  }
-});
+  },
+})
 
 // Types
 import { Property } from '@shared/global'
@@ -55,19 +55,22 @@ router.post(
 
       // Handle image upload if files are present
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-        console.log(`Processing ${req.files.length} images...`);
-        
-        const { data: images, error: imagesError } = await handleImagesUpload(req.files)
-        
+        console.log(`Processing ${req.files.length} images...`)
+
+        const { data: images, error: imagesError } = await handleImagesUpload(
+          req.files
+        )
+
         if (imagesError) {
-          console.error('Image upload error:', imagesError);
+          console.error('Image upload error:', imagesError)
           return errorResponse(res, imagesError, 400)
         }
 
         if (images && images.length > 0) {
-          const { data: updatedProperty, error: updateError } = await updatePropertyImages(property?.id, images)
+          const { data: updatedProperty, error: updateError } =
+            await updatePropertyImages(property?.id, images)
           if (updateError) {
-            console.error('Property update error:', updateError);
+            console.error('Property update error:', updateError)
             return errorResponse(res, updateError, 400)
           }
           property = updatedProperty
@@ -76,7 +79,7 @@ router.post(
 
       successResponse(res, property, 'Property created', 201)
     } catch (error: any) {
-      console.error('Property creation error:', error);
+      console.error('Property creation error:', error)
       errorResponse(res, error.message || 'Error creating the property', 400)
     }
   }

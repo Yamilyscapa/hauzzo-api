@@ -37,6 +37,7 @@ bun run start
 ## 🔧 Environment Variables
 
 Create a `.env` file with:
+
 ```env
 DATABASE_URL=postgresql://...
 JWT_SECRET=your-jwt-secret
@@ -50,6 +51,7 @@ PORT=8080
 ## 📚 API Endpoints
 
 ### Authentication
+
 - `POST /auth/broker/signup` - Broker registration and login
 - `POST /auth/broker/login` - Broker login
 - `POST /auth/refresh` - Refresh access tokens
@@ -57,49 +59,60 @@ PORT=8080
 - `POST /auth/logout-all` - Logout from all devices
 
 ### Properties
+
 - `GET /properties/all` - List all properties
 - `GET /properties/:id` - Get property by ID
 - `POST /properties/create` - Create new property (with images)
 - `PUT /properties/edit/:id` - Update property
 
 ### Brokers
+
 - `GET /brokers/:id` - Get broker by ID
 - `GET /brokers/email/:email` - Get broker by email
 - `POST /brokers/new` - Create new broker
 - `PUT /brokers/edit/:id` - Update broker
 
 ### Users
+
 - `GET /users/:id` - Get user by ID
 
 ### Search
+
 - `POST /search/tags` - Search properties by tags
 - `POST /search/description` - Search properties by description
 
 ## 🏢 Business Domains
 
 ### Authentication
+
 Handles user and broker authentication, registration, and JWT token management with refresh token rotation.
 
 ### Properties
+
 Core property management - creation, editing, image uploads, listing management.
 
 ### Brokers
+
 Broker profile management and property association.
 
 ### Users
+
 User profile management and saved properties.
 
 ### Search
+
 Property search functionality with tag and description filtering.
 
 ### Shared
+
 Common utilities, middleware, types, and helpers used across domains.
 
 ## 🗄️ Database
 
 PostgreSQL database with tables:
+
 - `brokers` - Broker profiles
-- `users` - User profiles  
+- `users` - User profiles
 - `properties` - Property listings
 - `user_saved_properties` - User saved properties
 
@@ -115,4 +128,4 @@ PostgreSQL database with tables:
 
 ---
 
-*Built with Bun, TypeScript, Express, and PostgreSQL*
+_Built with Bun, TypeScript, Express, and PostgreSQL_

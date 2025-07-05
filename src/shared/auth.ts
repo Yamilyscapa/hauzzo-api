@@ -43,34 +43,33 @@ export function auth(
 export async function signAuth(user: User | Broker): Promise<TokenPair> {
   const { email, id, role } = user
   const SECRET: string = process.env.JWT_SECRET || ''
-  const REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || SECRET + '_refresh'
+  const REFRESH_SECRET: string =
+    process.env.JWT_REFRESH_SECRET || SECRET + '_refresh'
 
   // Access token - short lived (15 minutes)
-  const accessToken = jwt.sign(
-    { email, id, role, type: 'access' },
-    SECRET,
-    { expiresIn: '15m' }
-  )
+  const accessToken = jwt.sign({ email, id, role, type: 'access' }, SECRET, {
+    expiresIn: '15m',
+  })
 
   // Refresh token - long lived (7 days)
-  const refreshToken = jwt.sign(
-    { id, type: 'refresh' },
-    REFRESH_SECRET,
-    { expiresIn: '7d' }
-  )
+  const refreshToken = jwt.sign({ id, type: 'refresh' }, REFRESH_SECRET, {
+    expiresIn: '7d',
+  })
 
   return { accessToken, refreshToken }
 }
 
 export function verifyRefreshToken(token: string): { id: string } | null {
   try {
-    const REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || (process.env.JWT_SECRET || '') + '_refresh'
+    const REFRESH_SECRET: string =
+      process.env.JWT_REFRESH_SECRET ||
+      (process.env.JWT_SECRET || '') + '_refresh'
     const decoded = jwt.verify(token, REFRESH_SECRET) as JwtPayload
-    
+
     if (decoded.type !== 'refresh') {
       return null
     }
-    
+
     return { id: decoded.id }
   } catch (err) {
     return null

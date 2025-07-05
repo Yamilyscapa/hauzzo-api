@@ -22,7 +22,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
   try {
     const { firstName, lastName, email, phone, password } = body
-    const generatedId = uuid4() // Generate a unique ID for the broker    
+    const generatedId = uuid4() // Generate a unique ID for the broker
 
     // Check if the required fields are present
     if (!firstName || !lastName || !email || !password) {
@@ -51,16 +51,22 @@ export async function createBroker(body: Broker): Promise<stdRes> {
 
     const query = {
       text: 'INSERT INTO brokers (first_name, last_name, email, phone, password, role, id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      values: [firstName, lastName, email, phone, hashedPassword, ROLE, generatedId],
+      values: [
+        firstName,
+        lastName,
+        email,
+        phone,
+        hashedPassword,
+        ROLE,
+        generatedId,
+      ],
     }
 
-    console.log(query);
-    
+    console.log(query)
 
     const { rows } = await pool.query(query)
 
-    console.log(query);
-    
+    console.log(query)
 
     response.broker = rows[0]
     response.error = null
@@ -142,7 +148,7 @@ export async function getBrokerById(id: string): Promise<stdRes> {
   }
 
   try {
-    console.log('getBrokerById - Received ID:', id);
+    console.log('getBrokerById - Received ID:', id)
     const query = {
       text: 'SELECT * FROM brokers WHERE id = $1',
       values: [id],
