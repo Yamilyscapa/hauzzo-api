@@ -86,8 +86,7 @@ export async function createLead(input: CreateLeadInput): Promise<StdRes> {
     if (!leadId) {
       try {
         const insertLead = {
-          text:
-            'INSERT INTO leads (broker_id, lead_email, lead_phone) VALUES ($1, $2, $3) RETURNING id, broker_id, lead_email, lead_phone, created_at',
+          text: 'INSERT INTO leads (broker_id, lead_email, lead_phone) VALUES ($1, $2, $3) RETURNING id, broker_id, lead_email, lead_phone, created_at',
           values: [effectiveBrokerId, email || null, phone || null],
         }
         const { rows } = await pool.query(insertLead)
@@ -105,7 +104,8 @@ export async function createLead(input: CreateLeadInput): Promise<StdRes> {
           if (rows[0]) {
             leadId = rows[0].id
           } else {
-            response.error = 'Duplicate lead detected but could not resolve existing record'
+            response.error =
+              'Duplicate lead detected but could not resolve existing record'
             return response
           }
         } else {

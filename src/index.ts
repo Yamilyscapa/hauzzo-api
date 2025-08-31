@@ -22,14 +22,28 @@ app.use((req: Request, res: Response, next: NextFunction) =>
 app.use(cookieParser())
 
 // CORS
-app.use(
-  cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-)
+// Read allowed origins from a single comma-separated env var: ALLOED_ORIGINS
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: Function) => {
+    // Allow non-browser requests (no origin) and any explicitly allowed origin
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    return callback(null, false)
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}
+
+app.use(cors(corsOptions))
+// Explicitly handle preflight for all routes (Express 5: avoid '*' pattern)
+app.options(/.*/, cors(corsOptions))
 
 // Router
 app.use(router)

@@ -46,7 +46,21 @@ IMAGEKIT_API_PUBLIC_KEY=your-imagekit-public-key
 IMAGEKIT_API_KEY=your-imagekit-private-key
 IMAGEKIT_ENDPOINT_URL=your-imagekit-endpoint
 PORT=8080
+# CORS: allowed origins (comma-separated supported via CORS_EXTRA_ORIGINS)
+# For local dev
+CORS_DEV_URL=http://localhost:3000
+# For production, set to your deployed app origin (no trailing slash)
+CORS_PROD_URL=https://your-app-domain.example
+# Optional: additional origins, comma-separated (e.g. preview/staging)
+CORS_EXTRA_ORIGINS=https://staging.example,https://preview.example
 ```
+
+### CORS Notes
+
+- The API uses cookie-based auth; the frontend must send requests with `credentials: "include"`.
+- When deployed, ensure `CORS_PROD_URL` matches your frontend origin exactly (scheme + host).
+- The server reflects only allowed origins and sets `Access-Control-Allow-Credentials: true`.
+- Preflight (`OPTIONS`) requests are handled globally.
 
 ## 📚 API Endpoints
 
@@ -122,7 +136,7 @@ PostgreSQL database with tables:
 - **Authentication**: JWT-based auth for brokers
 - **Search**: Tag and description-based property search
 - **File Upload**: Multer middleware for image handling
-- **CORS**: Cross-origin resource sharing enabled
+- **CORS**: Cross-origin resource sharing with credentials and allowlist
 - **Validation**: Email and password validation
 - **Error Handling**: Standardized error responses
 

@@ -8,7 +8,10 @@
     "start": "bun run dist/index.js",
     "build": "bun build src/index.ts --target bun --outfile dist/index.js",
     "format": "bunx prettier --write .",
-    "test": "bun test"
+    "test": "bun test",
+    "db:seed": "node seed-properties.js",
+    "db:generate-password": "node generate-password.js",
+    "db:clean": "node clean-database.js"
   },
   "author": "",
   "license": "ISC",

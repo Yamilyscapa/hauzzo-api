@@ -9,8 +9,10 @@ import brokerService from '../brokers/routes'
 import authService from '../authentication/routes'
 import searchService from '../search/routes'
 import leadService from '../leads/routes'
+import healthService from '../health/routes'
 
 // Using routes
+router.use('/health', healthService)
 router.use('/properties', propertyService)
 router.use('/users', userService)
 router.use('/brokers', brokerService)

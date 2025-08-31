@@ -288,8 +288,8 @@ export async function createProperty(
     const tagsArray: string[] = Array.isArray(tags)
       ? tags
       : typeof tags === 'string'
-      ? [tags]
-      : []
+        ? [tags]
+        : []
 
     // Insert into database
     const { rows } = await pool.query(
