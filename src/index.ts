@@ -4,6 +4,7 @@ import router from './routes/'
 import jsonParser from '@shared/jsonParser'
 import path from 'path'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 
 // Types
 import type { Application, NextFunction, Request, Response } from 'express'
@@ -12,17 +13,21 @@ import type { Application, NextFunction, Request, Response } from 'express'
 dotenv()
 const app: Application = express()
 
-// Middleware with error validation
+// JSON parser
 app.use((req: Request, res: Response, next: NextFunction) =>
   jsonParser(express.json, req, res, next)
 )
 
+// Cookie parser middleware
+app.use(cookieParser())
+
 // CORS
 app.use(
   cors({
-    origin: '*',
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   })
 )
 

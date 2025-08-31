@@ -8,6 +8,7 @@ import userService from '../users/routes'
 import brokerService from '../brokers/routes'
 import authService from '../authentication/routes'
 import searchService from '../search/routes'
+import leadService from '../leads/routes'
 
 // Using routes
 router.use('/properties', propertyService)
@@ -15,5 +16,6 @@ router.use('/users', userService)
 router.use('/brokers', brokerService)
 router.use('/auth', authService)
 router.use('/search', searchService)
+router.use('/leads', leadService)
 
 export default router

@@ -41,6 +41,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
     }
 
     const hashedPassword = await hashPassword(password)
+    const isAdmin = false
 
     // Check if the user already exists
     const brokerAlreadyExists = await getBrokerByEmail(email)
@@ -50,7 +51,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
     }
 
     const query = {
-      text: 'INSERT INTO brokers (first_name, last_name, email, phone, password, role, id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      text: 'INSERT INTO brokers (first_name, last_name, email, phone, password, role, id, admin) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       values: [
         firstName,
         lastName,
@@ -59,6 +60,7 @@ export async function createBroker(body: Broker): Promise<stdRes> {
         hashedPassword,
         ROLE,
         generatedId,
+        isAdmin,
       ],
     }
 
@@ -87,7 +89,7 @@ export async function editBroker(
     error: null,
   }
 
-  // Convert to key - values to make dynacmic the query
+  // Convert to key - values to make dynamic the query
   const currentBroker = {
     first_name: firstName,
     last_name: lastName,
@@ -97,35 +99,48 @@ export async function editBroker(
   }
 
   try {
-    const queryValues: (string | null)[] = Object.entries(currentBroker).map(
-      ([key, value]) => {
-        if (key === 'email') {
-          if (value && !validateEmail(value))
-            throw new Error('Invalid email format')
-        }
+    const setClauses: string[] = []
+    const values: any[] = []
+    let paramIndex = 1
 
-        if (key === 'password') {
-          if (value && !validatePassword(value))
-            throw new Error(
-              'Invalid password format; Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character'
-            )
-        }
+    for (const [key, rawValue] of Object.entries(currentBroker)) {
+      let value = rawValue as string | undefined
 
-        if (value === ' ') {
-          throw new Error(`Value for ${key} cannot be empty`)
-        }
-
-        if (!value) return null
-
-        return `${key} = '${value}'`
+      if (key === 'email') {
+        if (value && !validateEmail(value))
+          throw new Error('Invalid email format')
       }
-    )
 
-    const queryValuesNotNull = queryValues.filter((value) => value !== null)
+      if (key === 'password') {
+        if (value && !validatePassword(value))
+          throw new Error(
+            'Invalid password format; Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character'
+          )
+        // Hash password if provided
+        if (value) {
+          value = await hashPassword(value)
+        }
+      }
 
+      if (value === ' ') {
+        throw new Error(`Value for ${key} cannot be empty`)
+      }
+
+      if (value === undefined || value === null) continue
+
+      setClauses.push(`${key} = $${paramIndex}`)
+      values.push(value)
+      paramIndex++
+    }
+
+    if (setClauses.length === 0) {
+      throw new Error('No values to update')
+    }
+
+    // Put id as the last parameter for clarity
     const query = {
-      text: `UPDATE brokers SET ${queryValuesNotNull.join(', ')} WHERE id = $1 RETURNING *`,
-      values: [id],
+      text: `UPDATE brokers SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values: [...values, id],
     }
 
     const { rows } = await pool.query(query)

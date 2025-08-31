@@ -117,6 +117,61 @@ When you receive a `401` error with `"expired": true` in the error response:
 }
 ```
 
+### Lead
+
+```typescript
+{
+  id: string
+  broker_id: string
+  lead_email?: string
+  lead_phone?: string
+  created_at: string
+  property_ids?: string[]
+}
+```
+
+---
+
+## Lead Endpoints
+
+### POST /leads/create
+
+Create or reuse a lead and link it to a property. The broker is derived from the property owner. If a lead with the same email/phone already exists for that broker, it will be reused and linked to the property.
+
+Request Body:
+
+```json
+{
+  "propertyId": "uuid",
+  "email": "string (optional)",
+  "phone": "string (optional)",
+  "brokerId": "uuid (optional; must match property owner if provided)"
+}
+```
+
+Rules:
+
+- At least one of "email" or "phone" is required.
+- If "brokerId" is provided, it must match the property's owner.
+- Idempotent: linking the same lead to the same property is safe.
+
+Successful Response (201):
+
+```json
+{
+  "status": "Success",
+  "message": "Lead created",
+  "data": {
+    "id": "uuid",
+    "broker_id": "uuid",
+    "lead_email": "string|null",
+    "lead_phone": "string|null",
+    "created_at": "ISO timestamp",
+    "property_ids": ["uuid", "..."]
+  }
+}
+```
+
 ---
 
 ## Authentication Endpoints
@@ -643,6 +698,92 @@ Get user by ID.
 ---
 
 ## Search Endpoints
+
+### GET /search
+
+**🔥 Advanced property search with full-text search and filters**
+
+Search properties using PostgreSQL's full-text search capabilities with `plainto_tsquery` over indexed `search_vector` fields. Results are ranked by relevance using `ts_rank_cd`.
+
+**Query Parameters:**
+
+- `query` **(required)**: string - Search keywords (e.g., "cholula alberca", "casa centro")
+- `transaction` _(optional)_: `"rent"` | `"sale"` - Filter by transaction type
+- `type` _(optional)_: `"house"` | `"apartment"` - Filter by property type
+- `min_price` _(optional)_: number - Minimum price filter
+- `max_price` _(optional)_: number - Maximum price filter
+- `min_bedrooms` _(optional)_: number - Minimum bedrooms filter
+- `max_bedrooms` _(optional)_: number - Maximum bedrooms filter
+- `city` _(optional)_: string - Filter by city (partial match with ILIKE)
+- `state` _(optional)_: string - Filter by state (partial match with ILIKE)
+
+**Example Requests:**
+
+```bash
+# Basic search
+GET /search?query=cholula alberca
+
+# Search with filters
+GET /search?query=casa&transaction=sale&type=house&min_price=1000000&max_price=5000000
+
+# Search with location filters
+GET /search?query=centro&city=Cholula&state=Puebla&min_bedrooms=2
+
+# Complex search
+GET /search?query=apartamento&city=Puebla&state=Puebla&transaction=rent&min_price=10000&max_price=30000&min_bedrooms=1&max_bedrooms=3
+```
+
+**Response (200):**
+
+```json
+{
+  "status": "Success",
+  "message": "Found 5 properties",
+  "data": [
+    {
+      "id": "uuid",
+      "title": "Casa en Cholula con Alberca",
+      "description": "Hermosa casa...",
+      "price": 2500000,
+      "tags": ["alberca", "jardín", "cholula"],
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "parking": 2,
+      "location": {
+        "zip": "72810",
+        "city": "Cholula",
+        "state": "Puebla",
+        "street": "Calle Principal",
+        "address": "123 Calle Principal",
+        "neighborhood": "Centro",
+        "addressNumber": "123"
+      },
+      "type": "house",
+      "transaction": "sale",
+      "images": ["image_url1", "image_url2"],
+      "active": true,
+      "broker_id": "broker_uuid",
+      "rank": 0.8234 // Relevance score from ts_rank_cd
+    }
+    // ... more properties ordered by relevance
+  ]
+}
+```
+
+**Search Features:**
+
+- **Full-text search**: Uses PostgreSQL's `plainto_tsquery` with Spanish language support
+- **Weighted ranking**: Location fields (A), tags (B), title/description (C) with different weights
+- **Relevance ordering**: Results sorted by `ts_rank_cd` score (highest first)
+- **Efficient indexing**: Uses GIN indexes on `search_vector` for fast queries
+- **Partial matching**: City and state filters use `ILIKE` for flexible matching
+- **Active only**: Only returns active properties (`active = true`)
+- **Limit**: Returns maximum 20 results per query
+
+**Error Responses:**
+
+- `400`: Missing or invalid query parameter, invalid filter values, or logical inconsistencies (e.g., min_price > max_price)
+- `500`: Database query failed
 
 ### POST /search/tags
 

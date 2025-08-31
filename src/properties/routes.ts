@@ -7,6 +7,8 @@ import {
   findOneProperty,
   handleImagesUpload,
   updatePropertyImages,
+  updatePropertyActive,
+  deletedata,
 } from './controller'
 import { successResponse, errorResponse } from '@shared/responseHelper'
 import { auth, AuthenticatedRequest } from '@shared/auth'
@@ -85,12 +87,14 @@ router.post(
   }
 )
 
-// GET
+// GET - Specific routes must come before parameterized routes
 router.get('/all', async (req: Request, res: Response): Promise<any> => {
   try {
-    const limit = Number(req.query?.limit)
+    // Make limit optional with a default value
+    const limitParam = req.query?.limit
+    const limit = limitParam ? Number(limitParam) : 50 // Default to 50 if no limit provided
 
-    if (isNaN(limit)) {
+    if (limitParam && isNaN(limit)) {
       return errorResponse(res, 'Invalid limit value', 400)
     }
 
@@ -108,7 +112,7 @@ router.get('/all', async (req: Request, res: Response): Promise<any> => {
   }
 })
 
-// Get by id
+// Get by id - This must come after specific routes
 router.get(
   '/:id',
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
@@ -163,6 +167,80 @@ router.put(
   }
 )
 
+// Update images for a property (replace with keep + new uploads)
+router.put(
+  '/images/:id',
+  upload.array('images', 10),
+  auth,
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const id: string = req.params.id
+      if (!id) return errorResponse(res, 'No property id provided', 400)
+
+      // Parse keep list from body (JSON array of strings)
+      let keep: string[] = []
+      if (typeof req.body.keep === 'string') {
+        try {
+          keep = JSON.parse(req.body.keep)
+        } catch (e) {
+          return errorResponse(res, 'Invalid keep payload', 400)
+        }
+      } else if (Array.isArray(req.body.keep)) {
+        keep = req.body.keep
+      }
+
+      // Upload new images if provided
+      let uploaded: string[] = []
+      const files = req.files as Express.Multer.File[] | undefined
+      if (files && files.length > 0) {
+        const { data: images, error } = await handleImagesUpload(files)
+        if (error) return errorResponse(res, error, 400)
+        uploaded = images as string[]
+      }
+
+      const finalImages = [...keep, ...uploaded]
+      const { data, error } = await updatePropertyImages(id, finalImages)
+      if (error) return errorResponse(res, error, 400)
+
+      return successResponse(res, data, 'Images updated', 200)
+    } catch (error) {
+      return errorResponse(res, 'Error updating images', 400)
+    }
+  }
+)
+
+// Update active flag
+router.put(
+  '/active/:id',
+  auth,
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      const id: string = req.params.id
+      const { active } = req.body || {}
+      if (typeof active !== 'boolean') {
+        return errorResponse(res, 'Invalid active flag', 400)
+      }
+      if (!id) return errorResponse(res, 'No property id provided', 400)
+      const { data, error } = await updatePropertyActive(id, active)
+      if (error) return errorResponse(res, error, 400)
+      return successResponse(res, data, 'Property status updated', 200)
+    } catch (error) {
+      return errorResponse(res, 'Error updating status', 400)
+    }
+  }
+)
+
 // DELETE
+router.delete('/delete/:id', auth, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id
+    if (!id) return errorResponse(res, 'No property id provided', 400)
+    const { data, error } = await deletedata(id)
+    if (error) return errorResponse(res, error, 400)
+    return successResponse(res, data, 'Property deleted', 200)
+  } catch (error) {
+    return errorResponse(res, 'Error deleting the property', 400)
+  }
+})
 
 export default router

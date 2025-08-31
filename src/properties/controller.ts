@@ -153,10 +153,20 @@ export async function findManyProperties(limit?: number): Promise<stdRes> {
   }
 
   try {
-    let query = 'SELECT * FROM properties'
-    if (limit) query += ` LIMIT ${limit}`
+    let text = 'SELECT * FROM properties'
+    const values: any[] = []
+    if (limit !== undefined) {
+      const parsed = Number(limit)
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        response.error = 'Invalid limit value'
+        return response
+      }
+      const safeLimit = Math.min(parsed, 100)
+      text += ' LIMIT $1'
+      values.push(safeLimit)
+    }
 
-    const { rows: properties } = await pool.query(query)
+    const { rows: properties } = await pool.query({ text, values })
     response.data = properties
 
     if (properties.length === 0) {
@@ -212,12 +222,11 @@ export async function createProperty(
       type,
       location,
       transaction,
-    } = property
+    } = property as any
     const requiredFields = [
       'title',
       'description',
       'price',
-      'tags',
       'bedrooms',
       'bathrooms',
       'parking',
@@ -233,20 +242,25 @@ export async function createProperty(
       }
     }
 
-    // Validate that address is present in location
-    for (const key in location) {
-      if (!location[key as keyof typeof location]) {
-        response.error = 'Missing location data'
-        return response
-      }
-    }
+    // Normalize and validate location (accept JSON string or object)
+    const locationObj =
+      typeof location === 'string'
+        ? (JSON.parse(location) as Property['location'])
+        : (location as Property['location'])
 
     // Validate that the location data is complete
-    const locationRequiredFields = ['address', 'city', 'state', 'zip']
-    const locationJson = JSON.parse(location as any)
+    const locationRequiredFields = [
+      'address',
+      'city',
+      'state',
+      'zip',
+      'street',
+      'neighborhood',
+      'addressNumber',
+    ]
 
     const includesAll = locationRequiredFields.every((field) =>
-      Object.keys(locationJson).includes(field)
+      Object.prototype.hasOwnProperty.call(locationObj, field)
     )
 
     if (!includesAll) {
@@ -270,6 +284,13 @@ export async function createProperty(
       return response
     }
 
+    // Normalize tags (accept single string or array)
+    const tagsArray: string[] = Array.isArray(tags)
+      ? tags
+      : typeof tags === 'string'
+      ? [tags]
+      : []
+
     // Insert into database
     const { rows } = await pool.query(
       `INSERT INTO properties 
@@ -279,12 +300,12 @@ export async function createProperty(
       [
         title,
         description,
-        price,
-        tags,
-        bedrooms,
-        bathrooms,
-        parking,
-        JSON.stringify(location), // Stringify to store as JSON in Postgres
+        Number(price),
+        tagsArray,
+        Number(bedrooms),
+        Number(bathrooms),
+        Number(parking),
+        JSON.stringify(locationObj), // Store as JSON in Postgres
         type,
         brokerId,
         transaction,
@@ -350,68 +371,73 @@ export async function editProperty(
       zip: data.location.zip,
     }
 
-    const queryValues: (string | null)[] = Object.entries(currentdata).map(
-      ([key, value]) => {
-        // Validate value is not empty
-        if (value === ' ') {
-          response.error = `Value for ${key} cannot be empty`
-          return null
-        }
+    // Build parameterized SET clause safely
+    const setClauses: string[] = []
+    const values: any[] = []
+    let paramIndex = 1
 
-        if (!value) return null
+    for (const [key, rawValue] of Object.entries(currentdata)) {
+      let value = rawValue as any
 
-        // Convert tags to PostgreSQL array string format
-        if (key === 'tags') {
-          if (Array.isArray(value)) {
-            value = '{' + value.join(',') + '}'
-          } else if (typeof value === 'string') {
-            value = '{' + value + '}'
-          }
-        }
-
-        // Merge location data without overwriting the rest of the location data
-        if (key === 'location') {
-          if (!Array.isArray(data)) {
-            function getCommonKeys(
-              obj1: Record<string, any>,
-              obj2: Record<string, any>
-            ): Record<string, any> {
-              return Object.keys(obj1)
-                .filter((key) => key in obj2)
-                .reduce(
-                  (acc, key) => {
-                    acc[key] = obj1[key]
-                    return acc
-                  },
-                  {} as Record<string, any>
-                )
-            }
-
-            const newLocation = getCommonKeys(
-              currentLocation,
-              value as Property['location']
-            )
-
-            if (Object.keys(data.location).length === 0) return null
-            value = JSON.stringify({ ...data.location, ...newLocation })
-          }
-        }
-
-        return `${key} = '${value}'`
+      // Validate value is not empty single space
+      if (value === ' ') {
+        response.error = `Value for ${key} cannot be empty`
+        continue
       }
-    )
 
-    const queryValuesNotNull = queryValues.filter((value) => value !== null)
+      if (value === undefined || value === null) continue
+
+      // Normalize tags: accept string or array; pass array to pg for text[]
+      if (key === 'tags') {
+        if (Array.isArray(value)) {
+          if (value.length === 0) continue
+        } else if (typeof value === 'string') {
+          value = [value]
+        }
+      }
+
+      // Merge location data without overwriting the rest of the location data
+      if (key === 'location') {
+        if (!Array.isArray(data)) {
+          function getCommonKeys(
+            obj1: Record<string, any>,
+            obj2: Record<string, any>
+          ): Record<string, any> {
+            return Object.keys(obj1)
+              .filter((k) => k in obj2)
+              .reduce(
+                (acc, k) => {
+                  acc[k] = obj1[k]
+                  return acc
+                },
+                {} as Record<string, any>
+              )
+          }
+
+          const newLocation = getCommonKeys(
+            currentLocation,
+            value as Property['location']
+          )
+
+          if (Object.keys(data.location).length === 0) continue
+          value = JSON.stringify({ ...data.location, ...newLocation })
+        }
+      }
+
+      setClauses.push(`${key} = $${paramIndex}`)
+      values.push(value)
+      paramIndex++
+    }
 
     // If no values to update, return error
-    if (queryValuesNotNull.length === 0) {
+    if (setClauses.length === 0) {
       response.error = 'No values to update'
       return response
     }
 
     const query = {
-      text: `UPDATE properties SET ${queryValuesNotNull.join(', ')} WHERE id = $1 RETURNING *`,
-      values: [id],
+      text: `UPDATE properties SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values: [...values, id],
     }
 
     const { rows } = await pool.query(query)
@@ -481,6 +507,35 @@ export async function deletedata(id: string) {
 
     if (!rows[0]) {
       response.error = 'Property not found or already deleted'
+      return response
+    }
+
+    response.data = rows[0]
+    return response
+  } catch (error) {
+    response.error = error
+    return response
+  }
+}
+
+// UPDATE ACTIVE STATUS
+export async function updatePropertyActive(id: string, active: boolean) {
+  const response: stdRes = { data: null, error: null }
+
+  if (!validate(id)) {
+    response.error = 'Invalid data ID'
+    return response
+  }
+
+  try {
+    const query = {
+      text: `UPDATE properties SET active = $1 WHERE id = $2 RETURNING *`,
+      values: [!!active, id],
+    }
+    const { rows } = await pool.query(query)
+
+    if (!rows[0]) {
+      response.error = 'Property not found'
       return response
     }
 

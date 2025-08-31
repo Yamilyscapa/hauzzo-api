@@ -45,3 +45,12 @@ export interface User {
 export interface Broker extends User {
   role: UserType.broker
 }
+
+export type Lead = {
+  id: string
+  broker_id: string
+  lead_email?: string
+  lead_phone?: string
+  created_at: string
+  property_ids?: string[]
+}

@@ -20,7 +20,7 @@ export function auth(
 ): void {
   try {
     const SECRET: string = process.env.JWT_SECRET || ''
-    const token = req.header('Authorization')?.replace('Bearer ', '') || ''
+    const token = req.cookies?.accessToken || ''
 
     if (!token) {
       errorResponse(res, 'No token provided', 401)

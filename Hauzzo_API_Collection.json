@@ -1,0 +1,555 @@
+{
+  "info": {
+    "name": "Hauzzo API",
+    "description": "Complete collection for Hauzzo real estate API with authentication, properties, brokers, users, and search endpoints",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Broker Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"123-456-7890\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/broker/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "broker", "signup"]
+            },
+            "description": "Create a new broker account and automatically log in. Password must be at least 8 characters with uppercase, lowercase, number, and special character."
+          },
+          "response": []
+        },
+        {
+          "name": "Broker Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/broker/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "broker", "login"]
+            },
+            "description": "Login a broker and receive JWT tokens. Store the accessToken and refreshToken from response."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/broker/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "broker", "refresh"]
+            },
+            "description": "Refresh expired access token using refresh token. Update your stored tokens with the response."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/broker/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "broker", "logout"]
+            },
+            "description": "Logout and revoke refresh token from current device."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/broker/logout-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "broker", "logout-all"]
+            },
+            "description": "Logout from all devices. Requires authentication."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏢 Brokers",
+      "item": [
+        {
+          "name": "Create Broker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"phone\": \"987-654-3210\",\n  \"password\": \"AnotherSecure123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/brokers/new",
+              "host": ["{{baseUrl}}"],
+              "path": ["brokers", "new"]
+            },
+            "description": "Create a new broker account without automatic login."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Broker by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/brokers/{{brokerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["brokers", "{{brokerId}}"]
+            },
+            "description": "Retrieve broker information by UUID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Broker by Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/brokers/email/john.doe@example.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["brokers", "email", "john.doe@example.com"]
+            },
+            "description": "Retrieve broker information by email address."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Broker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John Updated\",\n  \"phone\": \"555-123-4567\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/brokers/edit/{{brokerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["brokers", "edit", "{{brokerId}}"]
+            },
+            "description": "Update broker information. Only provide fields you want to change."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏠 Properties",
+      "item": [
+        {
+          "name": "Create Property",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Beautiful House in Cholula",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "A lovely family home with pool and garden",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "2500000",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "[\"pool\", \"garden\", \"garage\", \"cholula\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "bedrooms",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "bathrooms",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "parking",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "{\"zip\":\"72810\",\"city\":\"Cholula\",\"state\":\"Puebla\",\"street\":\"Calle Principal\",\"address\":\"123 Calle Principal\",\"neighborhood\":\"Centro\",\"addressNumber\":\"123\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "house",
+                  "type": "text"
+                },
+                {
+                  "key": "transaction",
+                  "value": "sale",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "value": "",
+                  "type": "file",
+                  "description": "Upload up to 10 images (max 5MB each)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "create"]
+            },
+            "description": "Create a new property with optional images. Requires authentication. Use multipart/form-data for file uploads."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Properties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/properties/all?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "all"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of properties to return"
+                }
+              ]
+            },
+            "description": "Get all properties with optional limit parameter."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Property by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "{{propertyId}}"]
+            },
+            "description": "Retrieve a specific property by its UUID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Property Title\",\n  \"description\": \"Updated description\",\n  \"price\": 2750000,\n  \"tags\": [\"pool\", \"garden\", \"garage\", \"updated\"],\n  \"location\": {\n    \"zip\": \"72810\",\n    \"city\": \"Cholula\",\n    \"state\": \"Puebla\",\n    \"street\": \"Updated Street\",\n    \"address\": \"123 Updated Street\",\n    \"neighborhood\": \"Centro\",\n    \"addressNumber\": \"123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/edit/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "edit", "{{propertyId}}"]
+            },
+            "description": "Update an existing property. Requires authentication. Only provide fields you want to change."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 Users",
+      "item": [
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Retrieve user information by UUID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔍 Search",
+      "item": [
+        {
+          "name": "Advanced Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?query=cholula alberca&transaction=sale&type=house&min_price=1000000&max_price=5000000&min_bedrooms=2&max_bedrooms=4&city=Cholula&state=Puebla",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "cholula alberca",
+                  "description": "Required: Search keywords"
+                },
+                {
+                  "key": "transaction",
+                  "value": "sale",
+                  "description": "Optional: rent or sale"
+                },
+                {
+                  "key": "type",
+                  "value": "house",
+                  "description": "Optional: house or apartment"
+                },
+                {
+                  "key": "min_price",
+                  "value": "1000000",
+                  "description": "Optional: Minimum price"
+                },
+                {
+                  "key": "max_price",
+                  "value": "5000000",
+                  "description": "Optional: Maximum price"
+                },
+                {
+                  "key": "min_bedrooms",
+                  "value": "2",
+                  "description": "Optional: Minimum bedrooms"
+                },
+                {
+                  "key": "max_bedrooms",
+                  "value": "4",
+                  "description": "Optional: Maximum bedrooms"
+                },
+                {
+                  "key": "city",
+                  "value": "Cholula",
+                  "description": "Optional: City filter"
+                },
+                {
+                  "key": "state",
+                  "value": "Puebla",
+                  "description": "Optional: State filter"
+                }
+              ]
+            },
+            "description": "Advanced property search with full-text search and multiple filters. Uses PostgreSQL full-text search with relevance ranking."
+          },
+          "response": []
+        },
+        {
+          "name": "Basic Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search?query=casa centro",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "casa centro",
+                  "description": "Required: Search keywords"
+                }
+              ]
+            },
+            "description": "Basic search with just keywords. Returns results ordered by relevance."
+          },
+          "response": []
+        },
+        {
+          "name": "Search by Tags",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": [\"pool\", \"garden\", \"garage\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/search/tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["search", "tags"]
+            },
+            "description": "Search properties by specific tags."
+          },
+          "response": []
+        },
+        {
+          "name": "Search by Description",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"beautiful house with pool\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/search/description",
+              "host": ["{{baseUrl}}"],
+              "path": ["search", "description"]
+            },
+            "description": "Search properties by description text."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract tokens from login responses",
+          "if (pm.request.url.path.includes('login') || pm.request.url.path.includes('signup')) {",
+          "    pm.sendRequest(pm.request, function (err, response) {",
+          "        if (response && response.json() && response.json().data) {",
+          "            const data = response.json().data;",
+          "            if (data.accessToken) {",
+          "                pm.environment.set('accessToken', data.accessToken);",
+          "            }",
+          "            if (data.refreshToken) {",
+          "                pm.environment.set('refreshToken', data.refreshToken);",
+          "            }",
+          "        }",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
